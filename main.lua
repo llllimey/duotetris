@@ -27,21 +27,23 @@ function love.load()
     table.insert(Field, ground)
 
 
-    Piece = Tetrimino("t")
 end
 
 
 function love.focus(f) focus = f end
 
 function love.keypressed(key)
-
+    if key == "space" then
+        Piece = Tetrimino("t")
+        Piece:mark()
+        tick.recur(function() Piece:fall() end , 0.4)
+    end
 end
 
 function love.update(dt)
     if not focus then return end
-    local speed = 1
-    -- tetrimino falls
-    Piece:fall()
+    tick.update(dt)
+
     -- if tetrimino touches ground for long enough
     --  then tetrimino is no longer playable, new tetrimino spawns
 end
@@ -55,9 +57,6 @@ function love.draw()
             love.graphics.rectangle("fill", (j - 1)*blocksize, (i - 1)*blocksize, blocksize, blocksize)
         end
     end
-
-    -- draws the playable tetrimino
-    Piece:draw(blocksize)
 end
 
 function love.quit()

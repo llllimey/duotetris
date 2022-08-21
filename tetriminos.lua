@@ -168,11 +168,11 @@ function Tetrimino:new(type)
     self.row = 1
     -- the column a tetrmino spawns on depends on what type it is
     if type == "i" then
-        self.col = 3
-    elseif type == "o" then
-        self.col = 5
-    else
         self.col = 4
+    elseif type == "o" then
+        self.col = 6
+    else
+        self.col = 5
     end
 end
 
@@ -188,7 +188,6 @@ function Tetrimino:collides_at(c_row, c_col, c_rotation)
     end
     for i,row in ipairs(self.map[c_rotation]) do
         for j,block in ipairs(row) do
-            local block_col = (j - 1) + (c_col - 1)
             if block ~= ""  and Field[c_row + i - 1][c_col + j - 1] ~= " " then
                 -- if there's tetrimino's block is on the same location as an occupied spot on the field
                 --  then there is collision :(((
@@ -199,27 +198,27 @@ function Tetrimino:collides_at(c_row, c_col, c_rotation)
     return false
 end
 
--- marks tetrimino on the field
-function Tetrimino:mark()
+-- removes tetrimino from the field
+--  use together with mark() to ensure tetrimino doesn't leave a ghost behind
+function Tetrimino:erase()
     for i,row in ipairs(self.map[self.rotation]) do
         for j,block in ipairs(row) do
-            -- if the map contains a block, then set the block to the
-            --   corresponding location on the field
+            -- set field block to empty wherever a tetrimino is
             if block ~= "" then
-                Field[self.row + i - 1][self.col + j - 1] = block
+                Field[self.row + i - 1][self.col + j - 1] = " "
             end
         end
     end
 end
 
 
--- renders tetrimino to a specified block size
-function Tetrimino:draw(blocksize)
-    love.graphics.setColor(self.color)
+-- marks tetrimino on the field
+function Tetrimino:mark()
     for i,row in ipairs(self.map[self.rotation]) do
         for j,block in ipairs(row) do
+            -- set field block to tetrimino wherever tetrimino is
             if block ~= "" then
-                love.graphics.rectangle("fill", (j + self.col - 2)*blocksize, (i + self.row - 2)*blocksize, blocksize, blocksize)
+                Field[self.row + i - 1][self.col + j - 1] = block
             end
         end
     end
@@ -228,13 +227,16 @@ end
 -- moves tetrimino downwards by 1 if possible
 --   returns true if it falls, false if it can't
 function Tetrimino:fall()
+    self:erase()
     -- check to see if it will collide if it falls by 1
     local c_row = self.row + 1
     if self:collides_at(c_row, self.col, self.rotation) then
         -- collides :(
+        self:mark()
         return false
     end
     -- doesn't collide, so move downwards :))
     self.row = c_row
+    self:mark()
     return true
 end
