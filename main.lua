@@ -26,7 +26,31 @@ function love.load()
     end
     table.insert(Field, ground)
 
+    -- upcoming tetrominos
+    Queue = {}
+    Queue.pieces = {}
+    -- appends queue with a 7 tetriminos in a random order
+    function Queue:add_bag()
+        local bag = {"i", "o", "t", "s", "z", "j", "l"}
+        for i = #bag, 1, -1 do
+            local random = love.math.random(i)
+            table.insert(self.pieces, bag[random])
+            table.remove(bag, random)
+        end
+    end
+    -- gives the upcoming tetromino
+    function Queue:next()
+        next = self.pieces[1]
+        table.remove(self.pieces, 1)
+        -- also adds another bag to queue if need be
+        if #self.pieces < 7 then
+            self:add_bag()
+        end
+        return next
+    end
+    Queue:add_bag()
 
+    Speed = 0.5
 end
 
 
@@ -34,9 +58,17 @@ function love.focus(f) focus = f end
 
 function love.keypressed(key)
     if key == "space" then
-        Piece = Tetrimino("t")
+        Piece = Tetrimino(Queue:next())
         Piece:mark()
-        tick.recur(function() Piece:fall() end , 0.4)
+        Piece.falling = tick.recur(function() Piece:fall() end , Speed*Piece.speed)
+    end
+
+    if Piece then
+        if key == "left" then
+            Piece:move("left")
+        elseif key == "right" then
+            Piece:move("right")
+        end
     end
 end
 

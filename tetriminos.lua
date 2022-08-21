@@ -1,6 +1,6 @@
 -- tetrimino maps
-local maps ={{
-    i = {
+local maps ={
+    i = {{
         {"", "", "", ""},
         {"i", "i", "i", "i"},
         {"", "", "", ""},
@@ -130,8 +130,8 @@ local maps ={{
         {"", "z", ""},
         {"z", "z", ""},
         {"z", "", ""}
-    }
-}}
+    }}
+}
 
 -- colors of tetriminos (n is blank)
 Colors = {
@@ -166,6 +166,7 @@ function Tetrimino:new(type)
     self.color = Colors[type]
     self.rotation = 1
     self.row = 1
+    self.speed = 1
     -- the column a tetrmino spawns on depends on what type it is
     if type == "i" then
         self.col = 4
@@ -213,30 +214,64 @@ end
 
 
 -- marks tetrimino on the field
+--   does not check for collision
 function Tetrimino:mark()
     for i,row in ipairs(self.map[self.rotation]) do
         for j,block in ipairs(row) do
             -- set field block to tetrimino wherever tetrimino is
             if block ~= "" then
                 Field[self.row + i - 1][self.col + j - 1] = block
+                io.write("Set!")
             end
         end
     end
 end
 
--- moves tetrimino downwards by 1 if possible
+-- moves tetrimino by 1 unit if possible
 --   returns true if it falls, false if it can't
 function Tetrimino:fall()
     self:erase()
-    -- check to see if it will collide if it falls by 1
+    -- check to see if it will collide if it moves by 1 in direciton
     local c_row = self.row + 1
     if self:collides_at(c_row, self.col, self.rotation) then
         -- collides :(
         self:mark()
+        print("collides :(")
+        self.falling: stop()
         return false
     end
-    -- doesn't collide, so move downwards :))
+
+    -- doesn't collide, so fall :))
     self.row = c_row
     self:mark()
+    print("moves :)")
+    return true
+end
+
+function Tetrimino:move(dircetion)
+    -- c_col is new col after moving in specified direction
+    local c_col = self.col
+    if dircetion == "right" then
+        c_col = self.col + 1
+    elseif dircetion == "left" then
+        c_col = self.col - 1
+    else
+        print("Tetrimino:move: direction error")
+        return
+    end
+    
+    self:erase()
+    -- check to see if it would collide after moving to new col
+    if self:collides_at(self.row, c_col, self.rotation) then
+        -- collides :(
+        self:mark()
+        print("collides :(")
+        return false
+    end
+
+    -- doesn't collide, so move :))
+    self.col = c_col
+    self:mark()
+    print("moves :)")
     return true
 end
