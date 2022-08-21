@@ -1,36 +1,47 @@
 io.stdout:setvbuf("no")
 
 
-function love.load()
-    Object = require "classic"
-    require "tetriminos"
 
+function love.load()
+    tick = require "tick"
+    Object = require "classic"
+    
+    require "tetriminos"
+    
     FIELDHEIGHT = 20
     FIELDWIDTH = 10
     Field = {}
-
-    -- initialize field to blank tiles
+    -- initialize field to blank area with walls on sides and bottom
     for i=1, FIELDHEIGHT do
         table.insert(Field, {})
-        for j=1, FIELDWIDTH do
+        Field[i][1] = "X"
+        for j=2, FIELDWIDTH+1 do
             Field[i][j] = " "
         end
+        Field[i][FIELDWIDTH+2] = "X"
     end
+    local ground = {}
+    for i=1, FIELDWIDTH+2 do
+        table.insert(ground, "X")
+    end
+    table.insert(Field, ground)
+
+
+    Piece = Tetrimino("t")
 end
 
 
 function love.focus(f) focus = f end
 
 function love.keypressed(key)
-    if key == "t" then
-        Piece = Tetrimino("t")
-        Piece:exist()
-    end
+
 end
 
 function love.update(dt)
     if not focus then return end
-    -- if there is space, tetrimino falls
+    local speed = 1
+    -- tetrimino falls
+    Piece:fall()
     -- if tetrimino touches ground for long enough
     --  then tetrimino is no longer playable, new tetrimino spawns
 end
@@ -40,21 +51,13 @@ function love.draw()
     local blocksize = 20
     for i,row in ipairs(Field) do
         for j,block in ipairs(row) do
-            -- colors of tetriminos (n is blank)
-            local colors = {
-                [" "] = {1, 1, 1},
-                i = {0, 0.94, 0.94},
-                o = {0.94, 0.96, 0},
-                t = {0.72, 0, 1},
-                s = {0.15, 1, 0},
-                z = {255, 0, 0.35},
-                j = {0, 0.15, 1},
-                l = {1, 0.62, 0}
-            }  
-            love.graphics.setColor(colors[block])
-            love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
+            love.graphics.setColor(Colors[block])
+            love.graphics.rectangle("fill", (j - 1)*blocksize, (i - 1)*blocksize, blocksize, blocksize)
         end
     end
+
+    -- draws the playable tetrimino
+    Piece:draw(blocksize)
 end
 
 function love.quit()
