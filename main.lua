@@ -6,7 +6,7 @@ function love.load()
     tick = require "tick"
     Object = require "classic"
     
-    require "tetriminos"
+    require "tetrominos"
     
     FIELDHEIGHT = 20
     FIELDWIDTH = 10
@@ -29,7 +29,7 @@ function love.load()
     -- upcoming tetrominos
     Queue = {}
     Queue.pieces = {}
-    -- appends queue with a 7 tetriminos in a random order
+    -- appends queue with a 7 tetrominos in a random order
     function Queue:add_bag()
         local bag = {"i", "o", "t", "s", "z", "j", "l"}
         for i = #bag, 1, -1 do
@@ -50,7 +50,7 @@ function love.load()
     end
     Queue:add_bag()
 
-    Speed = 0.5
+    Speed = 0.3
 end
 
 
@@ -58,9 +58,7 @@ function love.focus(f) focus = f end
 
 function love.keypressed(key)
     if key == "space" then
-        Piece = Tetrimino(Queue:next())
-        Piece:mark()
-        Piece.falling = tick.recur(function() Piece:fall() end , Speed*Piece.speed)
+        Piece = Tetromino(Queue:next())
     end
 
     if Piece then
@@ -76,8 +74,13 @@ function love.update(dt)
     if not focus then return end
     tick.update(dt)
 
-    -- if tetrimino touches ground for long enough
-    --  then tetrimino is no longer playable, new tetrimino spawns
+    -- update existing piece
+    if Piece then
+        -- if tetrimino falls to ground, spawn next one
+        if Piece.isfallen then
+            Piece = Tetromino(Queue:next())
+        end
+    end
 end
 
 function love.draw()
