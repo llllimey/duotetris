@@ -143,7 +143,7 @@ Tetromino = Object:extend()
 --   row is on the y axis, col is on the x axis
 function Tetromino:new(type)
     self.map = maps[type]
-    self.kickmax = math.ceil(#self.map[1] * 0.5)
+    self:findkickmaps()
     self.rotation = 1
     self.row = FIELDSTART+1
     self.speed = 1
@@ -209,7 +209,7 @@ function Tetromino:collides_at(c_row, c_col, c_rotation)
                 -- check if block is out of bounds
                 local y = c_row + i - 1
                 local x = c_col + j - 1
-                
+
                 if y < 1 or y > FIELDHEIGHT
                     or x < 1 or x > FIELDWIDTH + 1 then
                     return true
@@ -285,10 +285,73 @@ function Tetromino:move(direction)
 end
 
 
+-- updates tetromino.kickmaps with a table of possible kicks
+function Tetromino:findkickmaps()
+    -- the furthest a tetromino can be kicked to is (maxkick - 1, maxkick) (x, y)
+    local maxkick = math.ceil(#self.map[1] * 0.5)
+    local unsorted = {}
+    for x = 0,maxkick - 1 do
+        local kick = {}
+        kick.x = x
+        for y = -x, maxkick do
+            kick.y = y
+            kick.distance = math.sqrt(x*x + y*y)
+            table.insert(unsorted, kick)
+        end
+    end
+
+    -- merge sort unsorted kick maps by distance, then y value
+    local function sort(kicks, start, stop)
+        if #kicks == 1 then
+            return kicks
+        else
+            local midpoint = math.floor(stop * 0.5)
+            -- sort first half of kicks
+            local half = sort(kicks, 1, midpoint)
+            -- sort second half of kicks
+            local half2 = sort(kicks, midpoint + 1, #kicks)
+
+            -- merge halves together
+            local merged = {}
+            while true do
+                -- if a half is empty, insert the other half into merged and be done merging
+                if not half then
+                    for i,v in half2 do
+                        table.insert(merged, v)
+                    end
+                    break
+                elseif not half2 then
+                    for i,v in half do
+                        table.insert(merged, v)
+                    end
+                    break
+                end
+                -- compare halves and move a value from a half to merged
+                if half[1].distance < half2[1].distance then
+                    table.insert(merged, half[1])
+                    table.remove(half, 1)
+                elseif half[1].distance > half2[1].distance then
+                    table.insert(merged, half2[1])
+                    table.remove(half2, 1)
+                elseif half[1].y > half2[1].y then
+                    table.insert(merged, half[1])
+                    table.remove(half, 1)
+                else
+                    table.insert(merged, half2[1])
+                    table.remove(half2, 1)
+                end
+            end
+            -- return merged halves
+            return merged
+        end
+    end
+    self.kickmaps = sort(unsorted, 1, #unsorted)
+end
+
+
 -- spins tetromino
 function Tetromino:spin(direction)
     local c_rotation = self.rotation
-    local change = {0, 0}
     local rot_mult = 0
 
     -- see which way it is spinning
@@ -301,7 +364,7 @@ function Tetromino:spin(direction)
         return
     end
 
-    -- adjust supposed rotation map depending on spin rotation
+    -- figure out which map it corresponds with after spinning
     c_rotation = self.rotation + 1 * rot_mult
     if c_rotation > 4 then
         c_rotation = 1
@@ -309,20 +372,47 @@ function Tetromino:spin(direction)
         c_rotation = 4
     end
 
+    -- determine if kicks should be positive/negative compared to defualt (+x, +y) kicks
+    local x_mult = rot_mult
+    local y_mult = rot_mult
+    if c_rotation == 1 or 2 then
+        x_mult = -1
+    end
+    if c_rotation == 1 or 3 then
+        y_mult = -1
+    end
+
+
     self:erase()
     -- check to see if it would collide after moving to new orientation
     -- TODO: if it collides, try kicking the piece
     -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
     --     and that amount -1 in the other
     --        this value is stored in self.kickmax
-    -- 1 bias kick up, 
-    while self:collides_at(self.row + change[2], self.col + change[1], c_rotation) do
 
+    local kickmaps = self.kickmaps
+    local row = self.col
+    local col = self.col
+    local length_kickmaps = #kickmaps
+    local kick
+    for i = 1, length_kickmaps do
+        if not self:collides_at(row + kickmaps[i].y * y_mult, col + kickmaps[i].x * x_mult, c_rotation) then
+            -- if it is able to find a working kick
+            -- break out of this godforsaken loop
+            kick.x = kickmaps[i].x
+            kick.y = kickmaps[i].y
+            break
+        elseif i == length_kickmaps then
+            -- if no possible spot is found
+            -- then it can't spin :(((
+            self:mark()
+            return false
+        end
     end
 
     -- doesn't collide, so move :))
-    self.col = self.col + change[1]
-    self.row = self.row + change[2]
+    self.col = self.col + kick.x
+    self.row = self.row + kick.y
     self.rotation = c_rotation
     print(self.col.." ".. self.row)
     self:mark()

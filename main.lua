@@ -56,9 +56,6 @@ function love.load()
     Falltime = 0.3
 end
 
-
-function love.focus(f) focus = f end
-
 function love.keypressed(key)
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
@@ -81,9 +78,11 @@ function love.keypressed(key)
     end
 end
 
+function love.focus(f) Focus = f end
+
 function love.update(dt)
     -- don't update if player clicks out of game window
-    if not focus then return end
+    if not Focus then return end
     -- don't update if game is over
     if GameOver then
         return
@@ -136,7 +135,7 @@ function love.draw()
         j = {0, 0.15, 1},
         l = {1, 0.62, 0}
     }
-    
+
     -- draws the playing field
     for i = FIELDSTART-1, FIELDHEIGHT+1 do
         for j,block in ipairs(Field[i]) do
