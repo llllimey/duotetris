@@ -51,7 +51,9 @@ function love.load()
     end
     Queue:add_bag()
 
-    Speed = 0.3
+    EVADE_MULTIPLIER = 0.8
+    LOCKTIME = 0.7
+    Falltime = 0.3
 end
 
 
@@ -85,10 +87,27 @@ function love.update(dt)
 
     tick.update(dt)
 
+
     -- update existing piece
     if Piece then
-        -- if tetrimino falls to ground, spawn next one
-        if Piece.isfallen then
+        if not Piece.locked then
+            -- Piece.time_next_fall keeps track of how long until a piece should try to fall again
+            -- Piece.time_still keeps track of how long the piece hasn't been moving for
+            -- Piece locks if it is still for more than 0.5 seconds
+            if Piece.time_still > LOCKTIME then
+                Piece.locked = true
+            else
+                Piece.time_still = Piece.time_still + dt
+                if Piece.time_next_fall > 0 then
+                    Piece.time_next_fall = Piece.time_next_fall - Piece.speed * dt
+                -- if it is time to fall, then try falling. If it falls, then timers need to reset to account for movement
+                elseif Piece:fall() then
+                    Piece.time_still = 0
+                    Piece.time_next_fall = Falltime
+                end
+            end
+        -- if tetrimino locks, player switches to new tetrimino
+        else
             Piece = Tetromino(Queue:next())
         end
     end

@@ -159,6 +159,9 @@ function Tetromino:new(type)
     self.rotation = 1
     self.row = FIELDSTART+1
     self.speed = 1
+    self.time_still = 0
+    self.time_next_fall = Falltime*0.2
+    self.evade_strength = 1
     -- the column a tetrmino spawns on depends on what type it is
     if type == "o" then
         self.col = 6
@@ -173,9 +176,8 @@ function Tetromino:new(type)
         return false
     end
 
-    -- spawns and begins to fall
+    -- spawns
     self:mark()
-    self.falling = tick.recur(function() self:fall() end , Speed*self.speed)
     return true
 end
 
@@ -233,8 +235,7 @@ function Tetromino:fall()
         -- collides, so stop falling:(
         self:mark()
         print("collides :(")
-        self.falling: stop()
-        self.isfallen = true
+        self.isfalling = false
         return false
     end
 
@@ -242,6 +243,8 @@ function Tetromino:fall()
     self.row = c_row
     self:mark()
     print("moves :)")
+    self.isfalling = true
+    self.evade_strength = 1
     return true
 end
 
@@ -271,5 +274,13 @@ function Tetromino:move(dircetion)
     self.col = c_col
     self:mark()
     print("moves :)")
+
+    -- also, let piece not lock as fast if they're aboutta be locked
+    -- but the more times they try to move to evade being locked, the less effective it is
+    -- the effectiveness is reset to normal if the piece falls
+    if not self.isfalling then
+        self.time_still = self.time_still - self.time_still * self.evade_strength
+        self.evade_strength = self.evade_strength * EVADE_MULTIPLIER
+    end
     return true
 end
