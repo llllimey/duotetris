@@ -8,7 +8,8 @@ function love.load()
     
     require "tetrominos"
     
-    FIELDHEIGHT = 20
+    FIELDHEIGHT = 40
+    FIELDSTART = FIELDHEIGHT - 20
     FIELDWIDTH = 10
     Field = {}
     -- initialize field to blank area with walls on sides and bottom
@@ -57,6 +58,10 @@ end
 function love.focus(f) focus = f end
 
 function love.keypressed(key)
+    -- if game is over, allow player to reset game by pressing space
+    if GameOver then
+        return
+    end
     if key == "space" then
         Piece = Tetromino(Queue:next())
     end
@@ -71,7 +76,13 @@ function love.keypressed(key)
 end
 
 function love.update(dt)
+    -- don't update if player clicks out of game window
     if not focus then return end
+    -- don't update if game is over
+    if GameOver then
+        return
+    end
+
     tick.update(dt)
 
     -- update existing piece
@@ -84,14 +95,21 @@ function love.update(dt)
 end
 
 function love.draw()
-    -- draws the playing field
+    -- centers and scales everything depending on window size
+    -- local width, height = love.window.getDimensions()
+    -- local wblock = width 
     local blocksize = 20
-    for i,row in ipairs(Field) do
-        for j,block in ipairs(row) do
+    love.graphics.translate(0, -math.floor(blocksize*0.7))
+    -- draws the playing field
+    for i = FIELDSTART-1, FIELDHEIGHT+1 do
+        for j,block in ipairs(Field[i]) do
             love.graphics.setColor(Colors[block])
-            love.graphics.rectangle("fill", (j - 1)*blocksize, (i - 1)*blocksize, blocksize, blocksize)
+            love.graphics.rectangle("fill", (j - 1)*blocksize, (i - FIELDSTART)*blocksize, blocksize, blocksize)
         end
     end
+
+    -- draw a game over overlay
+
 end
 
 function love.quit()

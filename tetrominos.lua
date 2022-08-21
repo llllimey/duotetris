@@ -64,7 +64,8 @@ local maps ={
 
     o = {{
         {"o", "o"},
-        {"o", "o"}
+        {"o", "o"},
+        {"", ""}
     }, {
         {"o", "o"},
         {"o", "o"}
@@ -147,16 +148,6 @@ Colors = {
     l = {1, 0.62, 0}
 }  
 
-
--- debug code
--- for i,row in ipairs(Field) do
---     for j,block in ipairs(row) do
---         io.write("X")
---     end
---     print()
--- end
-
-
 -- create tetromino class for controllable tetrominos
 Tetromino = Object:extend()
 
@@ -166,7 +157,7 @@ function Tetromino:new(type)
     self.map = maps[type]
     self.color = Colors[type]
     self.rotation = 1
-    self.row = 1
+    self.row = FIELDSTART+1
     self.speed = 1
     -- the column a tetrmino spawns on depends on what type it is
     if type == "o" then
@@ -175,21 +166,23 @@ function Tetromino:new(type)
         self.col = 5
     end
 
+    -- doesn't spawn if there's no space
+    if self:collides_at(self.row, self.col, self.rotation) then
+        GameOver = true
+        print("Game over")
+        return false
+    end
+
+    -- spawns and begins to fall
     self:mark()
     self.falling = tick.recur(function() self:fall() end , Speed*self.speed)
+    return true
 end
 
 
 -- checks if the tetromino will collide at a certain location/rotation
 --  returns true if it will collide, false if it won't collide
 function Tetromino:collides_at(c_row, c_col, c_rotation)
-    -- if c_row < 1 or c_row + #self.map[self.rotation]-1 > FIELDHEIGHT or
-    --    c_col < 1 or c_col + #self.map[self.rotation][1]-1> FIELDWIDTH or
-    --    c_rotation < 1 or c_rotation > 4 then
-    --     print(c_col)
-    --     print("error using Tetromino:collides_at")
-    --     return true
-    -- end
     for i,row in ipairs(self.map[c_rotation]) do
         for j,block in ipairs(row) do
             if block ~= ""  and Field[c_row + i - 1][c_col + j - 1] ~= " " then
