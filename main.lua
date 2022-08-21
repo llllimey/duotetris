@@ -73,6 +73,10 @@ function love.keypressed(key)
             Piece:move("left")
         elseif key == "right" then
             Piece:move("right")
+        elseif key == "," then
+            Piece:spin("countercw")
+        elseif key == "." then
+            Piece:spin("cw")
         end
     end
 end
