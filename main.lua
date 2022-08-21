@@ -123,10 +123,24 @@ function love.draw()
     -- local wblock = width 
     local blocksize = 20
     love.graphics.translate(0, -math.floor(blocksize*0.7))
+
+    -- colors of tetrominos (n is blank)
+    local colors = {
+        X = {0.5, 0.5, 0.5},
+        [" "] = {1, 1, 1},
+        i = {0, 0.94, 0.94},
+        o = {0.94, 0.96, 0},
+        t = {0.8, 0, 1},
+        s = {0.15, 1, 0},
+        z = {255, 0, 0.35},
+        j = {0, 0.15, 1},
+        l = {1, 0.62, 0}
+    }
+    
     -- draws the playing field
     for i = FIELDSTART-1, FIELDHEIGHT+1 do
         for j,block in ipairs(Field[i]) do
-            love.graphics.setColor(Colors[block])
+            love.graphics.setColor(colors[block])
             love.graphics.rectangle("fill", (j - 1)*blocksize, (i - FIELDSTART)*blocksize, blocksize, blocksize)
         end
     end

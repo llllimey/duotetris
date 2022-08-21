@@ -135,18 +135,6 @@ local maps ={
     }}
 }
 
--- colors of tetrominos (n is blank)
-Colors = {
-    X = {0.5, 0.5, 0.5},
-    [" "] = {1, 1, 1},
-    i = {0, 0.94, 0.94},
-    o = {0.94, 0.96, 0},
-    t = {0.8, 0, 1},
-    s = {0.15, 1, 0},
-    z = {255, 0, 0.35},
-    j = {0, 0.15, 1},
-    l = {1, 0.62, 0}
-}  
 
 -- create tetromino class for controllable tetrominos
 Tetromino = Object:extend()
@@ -155,7 +143,7 @@ Tetromino = Object:extend()
 --   row is on the y axis, col is on the x axis
 function Tetromino:new(type)
     self.map = maps[type]
-    self.color = Colors[type]
+    self.kickmax = math.ceil(#self.map[1] * 0.5)
     self.rotation = 1
     self.row = FIELDSTART+1
     self.speed = 1
@@ -216,10 +204,22 @@ end
 function Tetromino:collides_at(c_row, c_col, c_rotation)
     for i,row in ipairs(self.map[c_rotation]) do
         for j,block in ipairs(row) do
-            if block ~= ""  and Field[c_row + i - 1][c_col + j - 1] ~= " " then
-                -- if there's tetromino's block is on the same location as an occupied spot on the field
-                --  then there is collision :(((
-                return true
+            if block ~= ""  then
+
+                -- check if block is out of bounds
+                local y = c_row + i - 1
+                local x = c_col + j - 1
+                
+                if y < 1 or y > FIELDHEIGHT
+                    or x < 1 or x > FIELDWIDTH + 1 then
+                    return true
+                end
+
+                if Field[y][x] ~= " " then
+                    -- if there's tetromino's block is on the same location as an occupied spot on the field
+                    --  then there is collision :(((
+                    return true
+                end
             end
         end
     end
@@ -289,33 +289,35 @@ end
 function Tetromino:spin(direction)
     local c_rotation = self.rotation
     local change = {0, 0}
+    local rot_mult = 0
 
-    -- local kicktable = {
-
-    -- }
-    -- decide which map to use depending on spin direction
+    -- see which way it is spinning
     if direction == "cw" then
-        c_rotation = c_rotation + 1
-        if c_rotation > 4 then
-            c_rotation = 1
-        end
+        rot_mult = -1
     elseif direction == "countercw" then
-        c_rotation = c_rotation - 1
-        if c_rotation < 1 then
-            c_rotation = 4
-        end
+        rot_mult = 1
     else
         print("Tetromino:spin: direction error")
         return
     end
 
+    -- adjust supposed rotation map depending on spin rotation
+    c_rotation = self.rotation + 1 * rot_mult
+    if c_rotation > 4 then
+        c_rotation = 1
+    elseif c_rotation < 1 then
+        c_rotation = 4
+    end
+
     self:erase()
     -- check to see if it would collide after moving to new orientation
     -- TODO: if it collides, try kicking the piece
-    if self:collides_at(self.row + change[2], self.col + change[1], c_rotation) then
-        -- collides :(
-        self:mark()
-        return false
+    -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
+    --     and that amount -1 in the other
+    --        this value is stored in self.kickmax
+    -- 1 bias kick up, 
+    while self:collides_at(self.row + change[2], self.col + change[1], c_rotation) do
+
     end
 
     -- doesn't collide, so move :))
