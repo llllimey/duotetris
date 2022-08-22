@@ -158,7 +158,9 @@ function Tetromino:new(maps)
     self.evade_strength = 1
 
     -- tetrominos spawn on the center column, erring to the left
-    self.col = 3
+    local width = #self.map[1][1]
+    local center = FIELDWIDTH * 0.5 + 1
+    self.col = math.floor(center - width * 0.5)
 
     -- if there's no space, it can spawn one block higher
     if self:collides_at(self.row, self.col, self.rotation) then
