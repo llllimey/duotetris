@@ -309,12 +309,12 @@ function Tetromino:findkickmaps()
     -- start and stop are indexes of the table to start and stop sorting at
     --  this is a bit weird on my brain since tables are pointers
     local function sort(kicks, start, stop)
-        print(start..stop)
+        print(start..", "..stop)
         local len = (stop - start) + 1
-        if start - stop == 1 then
-            return 
+        if len == 1 then
+            return kicks
         else
-            local midpoint =  math.floor(len * 0.5) + start
+            local midpoint =  math.floor(len * 0.5) + start - 1
             -- sort first half of kicks
             sort(kicks, start, midpoint)
             -- sort second half of kicks
@@ -330,14 +330,41 @@ function Tetromino:findkickmaps()
             for i = midpoint + 1, stop do
                 table.insert(btemp, kicks[i])
             end
-            while true do
-                
+            for i = start, stop do
+                if atemp[1] and btemp[1] then
+                    if atemp[1].distance < btemp[1].distance then
+                        kicks[i] = atemp[1]
+                        table.remove(atemp, 1)
+                    elseif atemp[1].distance > btemp[1].distance then
+                        kicks[i] = btemp[1]
+                        table.remove(btemp, 1)
+                    elseif atemp[1].y > btemp[1].y then
+                        kicks[i] = atemp[1]
+                        table.remove(atemp, 1)
+                    elseif atemp[1].y < btemp[1].y then
+                        kicks[i] = btemp[1]
+                        table.remove(btemp, 1)
+                    end
+                else
+                    if not atemp[1] then
+                        kicks[i] = btemp[1]
+                        table.remove(btemp, 1)
+                    else
+                        kicks[i] = atemp[1]
+                        table.remove(atemp, 1)
+                    end
+                end
             end
 
-            return
+            return kicks
         end
     end
+    
     self.kickmaps = sort(unsorted, 1, #unsorted)
+
+    for i,v in ipairs(self.kickmaps) do
+        print("("..v.x..", "..v.y..") "..v.distance)
+    end
 end
 
 
@@ -386,7 +413,7 @@ function Tetromino:spin(direction)
     local row = self.col
     local col = self.col
     local length_kickmaps = #kickmaps
-    local kick
+    local kick = {}
     for i = 1, length_kickmaps do
         if not self:collides_at(row + kickmaps[i].y * y_mult, col + kickmaps[i].x * x_mult, c_rotation) then
             -- if it is able to find a working kick
