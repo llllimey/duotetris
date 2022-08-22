@@ -143,12 +143,18 @@ Tetromino = Object:extend()
 --   row is on the y axis, col is on the x axis
 function Tetromino:new(type)
     self.map = maps[type]
+    self.maxkick = math.ceil(#self.map[1] * 0.5)
     self:findkickmaps()
+
     self.rotation = 1
     self.row = FIELDSTART+1
+
     self.speed = 1
     self.time_still = 0
     self.time_next_fall = Falltime*0.2
+    self.falldistance = 0
+    self.landed = false
+
     self.evade_strength = 1
     -- the column a tetrmino spawns on depends on what type it is
     if type == "o" then
@@ -192,7 +198,7 @@ function Tetromino:mark()
             -- set field block to tetromino wherever tetromino is
             if block ~= "" then
                 Field[self.row + i - 1][self.col + j - 1] = block
-                io.write("Set!")
+                -- io.write("Set!")
             end
         end
     end
@@ -227,7 +233,7 @@ function Tetromino:collides_at(c_row, c_col, c_rotation)
 end
 
 
--- moves tetromino by 1 unit if possible
+-- makes tetromino fall 1 unit, if possible
 --   returns true if it falls, false if it can't
 function Tetromino:fall()
     self:erase()
@@ -236,17 +242,30 @@ function Tetromino:fall()
     if self:collides_at(c_row, self.col, self.rotation) then
         -- collides, so stop falling:(
         self:mark()
-        self.isfalling = false
+        self.falldistance = 0
+        self.landed = true
         -- print("hits ground :(")
         return false
     end
 
     -- doesn't collide, so fall :))
+
+    -- if it falls far enough, it is no longer landed
+    --   this should allow for elevators, but not spinning in place
+    if self.falldistance > self.maxkick then
+        self.evade_strength = 1
+        self.landed = false
+    end
+
     self.row = c_row
     self:mark()
-    self.isfalling = true
-    self.evade_strength = 1
-    print("falls")
+    self.falldistance = self.falldistance + 1
+    print(self.falldistance)
+    if self.landed then
+        print("landed")
+    else
+        print("not landed")
+    end
     return true
 end
 
@@ -277,7 +296,7 @@ function Tetromino:move(direction)
     -- also, let piece not lock as fast if they're aboutta be locked
     -- but the more times they try to move to evade being locked, the less effective it is
     -- the effectiveness is reset to normal if the piece falls
-    if not self.isfalling then
+    if self.landed then
         self.time_still = self.time_still - self.time_still * self.evade_strength
         self.evade_strength = self.evade_strength * EVADE_MULTIPLIER
     end
@@ -288,7 +307,7 @@ end
 -- updates tetromino.kickmaps with a table of possible kicks
 function Tetromino:findkickmaps()
     -- the furthest a tetromino can be kicked to is (maxkick - 1, maxkick) (x, y)
-    local maxkick = math.ceil(#self.map[1] * 0.5)
+    local maxkick = self.maxkick
     local unsorted = {}
     for x = -maxkick+1, maxkick-1 do
         for y = -maxkick, maxkick do
@@ -362,7 +381,7 @@ function Tetromino:findkickmaps()
     
     self.kickmaps = sort(unsorted, 1, #unsorted)
     for i,v in pairs(self.kickmaps) do
-        print("("..v.x..", "..v.y..")")
+        -- print("("..v.x..", "..v.y..")")
     end
 end
 
@@ -410,6 +429,7 @@ function Tetromino:spin(direction)
     local kickmaps = self.kickmaps
     local row = self.row
     local col = self.col
+    local height_gained
     for i,v in pairs(kickmaps) do
         local xkick = v.x * x_mult
         local ykick = v.y * y_mult
@@ -420,9 +440,17 @@ function Tetromino:spin(direction)
             self.row = row + ykick
             self.col = col + xkick
             self.rotation = c_rotation
+            height_gained = ykick
             -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
             break
         end
+    end
+
+    -- check if it is now touching the gound
+    if self:collides_at(self.row - 1, self.col, self.rotation) then
+        self.falldistance = 0
+        self.landed = true
+        print("landed via spin")
     end
 
     -- doesn't collide, so move :))
@@ -431,9 +459,10 @@ function Tetromino:spin(direction)
     -- also, let piece not lock as fast if they're aboutta be locked
     -- but the more times they try to move to evade being locked, the less effective it is
     -- the effectiveness is reset to normal if the piece falls
-    if not self.isfalling then
+    if self.landed then
         self.time_still = self.time_still - self.time_still * self.evade_strength
-        self.evade_strength = self.evade_strength * EVADE_MULTIPLIER
+        self.evade_strength = self.evade_strength * KICK_EVADE_MULTIPLIER
     end
+    print(self.evade_strength)
     return true
 end

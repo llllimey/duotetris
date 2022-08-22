@@ -56,6 +56,7 @@ function love.load()
     -- print()
 
     EVADE_MULTIPLIER = 0.8
+    KICK_EVADE_MULTIPLIER = 0.9
     LOCKTIME = 0.7
     Falltime = 0.3
 end
@@ -100,26 +101,22 @@ function love.update(dt)
 
     -- update existing piece
     if Piece then
-        if not Piece.locked then
-            -- Piece.time_next_fall keeps track of how long until a piece should try to fall again
-            -- Piece.time_still keeps track of how long the piece hasn't been moving for
-            -- Piece locks if it is still for more than 0.5 seconds
-            if Piece.time_still > LOCKTIME then
-                Piece.locked = true
-            else
-                Piece.time_still = Piece.time_still + dt
-                if Piece.time_next_fall > 0 then
-                    Piece.time_next_fall = Piece.time_next_fall - Piece.speed * dt
-                -- if it is time to fall, then try falling. If it falls, then timers need to reset to account for movement
-                elseif Piece:fall() then
-                    Piece.time_still = 0
-                    Piece.time_next_fall = Falltime
-                end
-            end
-        -- if tetrimino locks, player switches to new tetrimino
-        else
-            GameOver = true
+        -- Piece.time_next_fall keeps track of how long until a piece should try to fall again
+        -- Piece.time_still keeps track of how long the piece hasn't fallen for
+        -- Piece locks if it is still for more than 0.5 seconds
+        if Piece.time_still > LOCKTIME then
             Piece = Tetromino(Queue:next())
+        else
+            Piece.time_still = Piece.time_still + dt
+            if not Piece.landed then
+                Piece.time_still = 0
+            end
+            if Piece.time_next_fall > 0 then
+                Piece.time_next_fall = Piece.time_next_fall - Piece.speed * dt
+            -- if it is time to fall, then try falling. If it falls, then timers need to reset to account for movement
+            elseif Piece:fall() then
+                Piece.time_next_fall = Falltime
+            end
         end
     end
 end
