@@ -141,8 +141,8 @@ Tetromino = Object:extend()
 
 -- spawns a tetromino given a type (i, o, j, etc)
 --   row is on the y axis, col is on the x axis
-function Tetromino:new(type)
-    self.map = Maps[type]
+function Tetromino:new(maps)
+    self.map = maps
     self.maxkick = math.ceil(#self.map[1] * 0.5)
     self:findkickmaps()
 

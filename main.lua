@@ -77,7 +77,7 @@ function love.keypressed(key)
     end
     -- start the game by pressing space
     if (not GameStarting or not GameStarted) and key == "space" then
-        Piece = Tetromino(Queue:next())
+        Piece = Tetromino(Maps[Queue:next()])
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
@@ -92,6 +92,16 @@ function love.keypressed(key)
             Piece:spin("countercw")
         elseif key == "." then
             Piece:spin("cw")
+        end
+        if key == "m" then
+            if not Held then
+                Held = Piece.map
+                Piece = Tetromino(Maps[Queue:next()])
+            else
+                local temp = Held
+                Held = Piece.map
+                Piece = Tetromino(temp)
+            end
         end
     end
 end
@@ -127,7 +137,7 @@ function love.update(dt)
         -- Piece.time_still keeps track of how long the piece hasn't fallen for
         -- Piece locks if it is still for more than 0.5 seconds
         if Piece.time_still > LOCKTIME then
-            Piece = Tetromino(Queue:next())
+            Piece = Tetromino(Maps[Queue:next()])
         else
             Piece.time_still = Piece.time_still + dt
             if not Piece.landed then
@@ -194,11 +204,18 @@ function love.draw()
         return
     end
 
+    local miniblocksize = math.ceil(blocksize * 0.9)
+
+    --draw the held tetromino
+    if Held then
+        local offset
+    end
+
+
     -- draws next blocks
     love.graphics.translate((FIELDWIDTH + 1) * blocksize, -(topblock) * blocksize)
     love.graphics.setColor(1,1,1)
     local offset = 3
-    local miniblocksize = math.ceil(blocksize * 0.9)
     for i=1, 6 do
         local shape = Queue.pieces[i]
         if not colors[shape] then
