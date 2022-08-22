@@ -290,59 +290,51 @@ function Tetromino:findkickmaps()
     -- the furthest a tetromino can be kicked to is (maxkick - 1, maxkick) (x, y)
     local maxkick = math.ceil(#self.map[1] * 0.5)
     local unsorted = {}
-    for x = 0,maxkick - 1 do
-        local kick = {}
-        kick.x = x
+    for x = 0, maxkick-1 do
         for y = -x, maxkick do
+            local kick = {}
+            kick.x = x
             kick.y = y
             kick.distance = math.sqrt(x*x + y*y)
             table.insert(unsorted, kick)
         end
     end
 
+    print("unsorted:")
+    for i,v in ipairs(unsorted) do
+        print("("..v.x..", "..v.y..") "..v.distance)
+    end
+
     -- merge sort unsorted kick maps by distance, then y value
+    -- start and stop are indexes of the table to start and stop sorting at
+    --  this is a bit weird on my brain since tables are pointers
     local function sort(kicks, start, stop)
-        if #kicks == 1 then
-            return kicks
+        print(start..stop)
+        local len = (stop - start) + 1
+        if start - stop == 1 then
+            return 
         else
-            local midpoint = math.floor(stop * 0.5)
+            local midpoint =  math.floor(len * 0.5) + start
             -- sort first half of kicks
-            local half = sort(kicks, 1, midpoint)
+            sort(kicks, start, midpoint)
             -- sort second half of kicks
-            local half2 = sort(kicks, midpoint + 1, #kicks)
+            sort(kicks, midpoint + 1, stop)
 
             -- merge halves together
-            local merged = {}
-            while true do
-                -- if a half is empty, insert the other half into merged and be done merging
-                if not half then
-                    for i,v in half2 do
-                        table.insert(merged, v)
-                    end
-                    break
-                elseif not half2 then
-                    for i,v in half do
-                        table.insert(merged, v)
-                    end
-                    break
-                end
-                -- compare halves and move a value from a half to merged
-                if half[1].distance < half2[1].distance then
-                    table.insert(merged, half[1])
-                    table.remove(half, 1)
-                elseif half[1].distance > half2[1].distance then
-                    table.insert(merged, half2[1])
-                    table.remove(half2, 1)
-                elseif half[1].y > half2[1].y then
-                    table.insert(merged, half[1])
-                    table.remove(half, 1)
-                else
-                    table.insert(merged, half2[1])
-                    table.remove(half2, 1)
-                end
+            -- store unsorted stuff in a temp
+            local atemp = {}
+            for i = start, midpoint do
+                table.insert(atemp, kicks[i])
             end
-            -- return merged halves
-            return merged
+            local btemp = {}
+            for i = midpoint + 1, stop do
+                table.insert(btemp, kicks[i])
+            end
+            while true do
+                
+            end
+
+            return
         end
     end
     self.kickmaps = sort(unsorted, 1, #unsorted)
