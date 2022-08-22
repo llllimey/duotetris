@@ -147,27 +147,29 @@ function Tetromino:new(maps)
     self:findkickmaps()
 
     self.rotation = 1
-    self.row = FIELDSTART+1
+    self.row = FIELDHEIGHT + 1 - 20
 
     self.speed = 1
     self.time_still = 0
-    self.time_next_fall = Falltime*0.2
+    self.time_next_fall = Falltime
     self.falldistance = 0
     self.landed = false
 
     self.evade_strength = 1
-    -- the column a tetrmino spawns on depends on what type it is
-    if type == "o" then
-        self.col = 6
-    else
-        self.col = 5
-    end
 
-    -- doesn't spawn if there's no space
+    -- tetrominos spawn on the center column, erring to the left
+    self.col = 3
+
+    -- if there's no space, it can spawn one block higher
     if self:collides_at(self.row, self.col, self.rotation) then
-        GameOver = true
-        print("Game over")
-        return false
+        if self:collides_at(self.row + 1, self.col, self.rotation) then
+            GameOver = true
+            print("Game over")
+            -- print(self.col, self.row)
+            return false
+        else
+            self.row = self.row + 1
+        end
     end
 
     -- spawns
@@ -211,19 +213,12 @@ function Tetromino:collides_at(c_row, c_col, c_rotation)
     for i,row in ipairs(self.map[c_rotation]) do
         for j,block in ipairs(row) do
             if block ~= ""  then
-
-                -- check if block is out of bounds
                 local y = c_row + i - 1
                 local x = c_col + j - 1
-
-                if y < 1 or y > FIELDHEIGHT
-                    or x < 1 or x > FIELDWIDTH + 1 then
-                    return true
-                end
-
-                if Field[y][x] ~= " " then
-                    -- if there's tetromino's block is on the same location as an occupied spot on the field
+                if not Field[y] or Field[y][x] ~= " " then
+                    -- if the tile the tetrimino is on isn't empty
                     --  then there is collision :(((
+                    -- print("col "..x.. " row "..y)
                     return true
                 end
             end

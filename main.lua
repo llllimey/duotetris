@@ -3,36 +3,38 @@ io.stdout:setvbuf("no")
 
 
 function love.load()
-    love.window.setMode(528, 486)
+    love.window.setMode(504, 486)
 
     tick = require "tick"
     Object = require "classic"
     
     require "tetrominos"
     
+
     FIELDHEIGHT = 40
-    FIELDSTART = FIELDHEIGHT - 20
+    FIELDHEIGHTVISIBLE = 20.25
     FIELDWIDTH = 10
     function Start()
         Field = {}
         -- initialize field to blank area with walls on sides and bottom
         for i=1, FIELDHEIGHT do
             table.insert(Field, {})
-            Field[i][1] = "X"
-            for j=2, FIELDWIDTH+1 do
+            for j=1, FIELDWIDTH do
                 Field[i][j] = " "
             end
-            Field[i][FIELDWIDTH+2] = "X"
         end
-        local ground = {}
-        for i=1, FIELDWIDTH+2 do
-            table.insert(ground, "X")
-        end
-        table.insert(Field, ground)
+
+        -- -- print field for debugging
+        -- for i = 1, #Field do
+        --     for j,block in pairs(Field[i]) do
+        --         io.write(block.." ")
+        --     end
+        --     print("|"..i)
+        -- end
 
         -- upcoming tetrominos
         Queue = {}
-        Queue.pieces = {}
+        Queue.pieces = {"t"}
         -- appends queue with a 7 tetrominos in a random order
         function Queue:add_bag()
             local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -60,10 +62,10 @@ function love.load()
         Falltime = 0.3
     end
     Start()
-    -- for i,v in pairs(Queue.pieces) do
-    --     io.write(v)
-    -- end
-    -- print()
+    for i,v in pairs(Queue.pieces) do
+        io.write(v)
+    end
+    print()
 end
 
 function love.keypressed(key)
@@ -76,12 +78,11 @@ function love.keypressed(key)
         return
     end
     -- start the game by pressing space
-    if (not GameStarting or not GameStarted) and key == "space" then
+    if not GameStarting and not GameStarted and key == "space" then
         Piece = Tetromino(Maps[Queue:next()])
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
-        GameStarted = true
     end
     if Piece then
         if key == "left" then
@@ -96,10 +97,12 @@ function love.keypressed(key)
         if key == "m" then
             if not Held then
                 Held = Piece.map
+                Piece:erase()
                 Piece = Tetromino(Maps[Queue:next()])
             else
                 local temp = Held
                 Held = Piece.map
+                Piece:erase()
                 Piece = Tetromino(temp)
             end
         end
@@ -118,6 +121,7 @@ function love.update(dt)
         end
         if Begin_overlay == 3 then
             GameStarting = false
+            GameStarted = true
         end
         return
     end
@@ -158,11 +162,11 @@ function love.draw()
     local height = love.graphics.getHeight()
 
     -- centers and scales everything depending on window size
-    local border = 5
+    local miniblockscale = 0.9
+    local border = 5 * miniblockscale
     local display_width_blocks = (FIELDWIDTH + border + border + 2)
-    local topblock = 0.25
     local wblock = width / display_width_blocks
-    local hblock = height / (FIELDHEIGHT-FIELDSTART + topblock)
+    local hblock = height / (FIELDHEIGHTVISIBLE)
 
     local blocksize
     if wblock < hblock then
@@ -172,15 +176,14 @@ function love.draw()
     end
 
     local remainder = width - display_width_blocks * blocksize
-    local offset = math.floor(remainder * 0.5)
+    local woffset = math.floor(remainder * 0.5) + border*blocksize + 1
 
     love.graphics.push()
-    love.graphics.translate(offset + border*blocksize, -math.floor(blocksize*(1 - topblock)))
+    love.graphics.translate(woffset, -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize))
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        X = {0.5, 0.5, 0.5},
         [" "] = {1, 1, 1},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
@@ -192,30 +195,34 @@ function love.draw()
     }
 
     -- draws the playing field
-    for i = FIELDSTART-1, FIELDHEIGHT+1 do
-        for j,block in ipairs(Field[i]) do
+    for i,row in ipairs(Field) do
+        for j,block in pairs(row) do
             love.graphics.setColor(colors[block])
-            love.graphics.rectangle("fill", (j - 1)*blocksize, (i - FIELDSTART)*blocksize, blocksize, blocksize)
+            love.graphics.rectangle("fill", j * blocksize, (i - 1)*blocksize, blocksize, blocksize)
         end
     end
 
     -- don't draw anything past this if game isn't started yet
-    if not GameStarted then
+    if not GameStarted and not GameStarting then
+        love.graphics.pop()
         return
     end
 
-    local miniblocksize = math.ceil(blocksize * 0.9)
+    local miniblocksize = math.ceil(blocksize * miniblockscale)
 
     --draw the held tetromino
     if Held then
-        local offset
+        local offset = -4
+        -- if 
     end
 
-
     -- draws next blocks
-    love.graphics.translate((FIELDWIDTH + 1) * blocksize, -(topblock) * blocksize)
+    love.graphics.pop()
+    love.graphics.push()
+    love.graphics.translate(woffset + (FIELDWIDTH + 1) * blocksize, 0)
     love.graphics.setColor(1,1,1)
-    local offset = 3
+
+    local offset = 2
     for i=1, 6 do
         local shape = Queue.pieces[i]
         if not colors[shape] then
@@ -243,12 +250,7 @@ function love.draw()
     if GameStarting then
         -- the starting animation
         --   (a rectangle overlay that disappears a bit each second)
-        local offset = 0
-        if Begin_overlay == 1 then
-            offset = math.floor(width / 3)
-        elseif Begin_overlay == 2 then
-            offset = math.floor(width * 2 / 3)
-        end
+        offset = math.floor(width * Begin_overlay / 3)
 
         love.graphics.setColor(0, 0, 100, 0.5)
         love.graphics.rectangle("fill", offset, 0, width, height)
