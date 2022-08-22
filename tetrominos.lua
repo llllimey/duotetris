@@ -1,6 +1,6 @@
 -- tetromino maps
 -- first map should be of tetrimino laying on side
-local maps ={
+Maps ={
     i = {{
         {"", "", "", ""},
         {"i", "i", "i", "i"},
@@ -142,7 +142,7 @@ Tetromino = Object:extend()
 -- spawns a tetromino given a type (i, o, j, etc)
 --   row is on the y axis, col is on the x axis
 function Tetromino:new(type)
-    self.map = maps[type]
+    self.map = Maps[type]
     self.maxkick = math.ceil(#self.map[1] * 0.5)
     self:findkickmaps()
 
@@ -260,12 +260,12 @@ function Tetromino:fall()
     self.row = c_row
     self:mark()
     self.falldistance = self.falldistance + 1
-    print(self.falldistance)
-    if self.landed then
-        print("landed")
-    else
-        print("not landed")
-    end
+    -- print(self.falldistance)
+    -- if self.landed then
+    --     print("landed")
+    -- else
+    --     print("not landed")
+    -- end
     return true
 end
 
@@ -463,6 +463,6 @@ function Tetromino:spin(direction)
         self.time_still = self.time_still - self.time_still * self.evade_strength
         self.evade_strength = self.evade_strength * KICK_EVADE_MULTIPLIER
     end
-    print(self.evade_strength)
+    -- print(self.evade_strength)
     return true
 end
