@@ -1,71 +1,72 @@
 -- tetromino maps
 -- first map should be of tetrimino laying on side
+-- maps are always squares
 Maps ={
     i = {{
-        {"", "", "", ""},
+        {" ", " ", " ", " "},
         {"i", "i", "i", "i"},
-        {"", "", "", ""},
-        {"", "", "", ""}
+        {" ", " ", " ", " "},
+        {" ", " ", " ", " "}
     }, {
-        {"", "", "i", ""},
-        {"", "", "i", ""},
-        {"", "", "i", ""},
-        {"", "", "i", ""}
+        {" ", " ", "i", " "},
+        {" ", " ", "i", " "},
+        {" ", " ", "i", " "},
+        {" ", " ", "i", " "}
     }, {
-        {"", "", "", ""},
-        {"", "", "", ""},
+        {" ", " ", " ", " "},
+        {" ", " ", " ", " "},
         {"i", "i", "i", "i"},
-        {"", "", "", ""}
+        {" ", " ", " ", " "}
     }, {
-        {"", "i", "", ""},
-        {"", "i", "", ""},
-        {"", "i", "", ""},
-        {"", "i", "", ""}
+        {" ", "i", " ", " "},
+        {" ", "i", " ", " "},
+        {" ", "i", " ", " "},
+        {" ", "i", " ", " "}
     }
     },
 
     j = {{
-        {"j", "", ""},
+        {"j", " ", " "},
         {"j", "j", "j"},
-        {"", "", ""}
+        {" ", " ", " "}
     }, {
-        {"", "j", "j"},
-        {"", "j", ""},
-        {"", "j", ""},
+        {" ", "j", "j"},
+        {" ", "j", " "},
+        {" ", "j", " "},
     }, {
-        {"", "", ""},
+        {" ", " ", " "},
         {"j", "j", "j"},
-        {"", "", "j"}
+        {" ", " ", "j"}
     }, {
-        {"", "j", ""},
-        {"", "j", ""},
-        {"j", "j", ""}
+        {" ", "j", " "},
+        {" ", "j", " "},
+        {"j", "j", " "}
     }
     },
 
     l = {{
-        {"", "", "l"},
+        {" ", " ", "l"},
         {"l", "l", "l"},
-        {"", "", ""}
+        {" ", " ", " "}
     }, {
-        {"", "l", ""},
-        {"", "l", ""},
-        {"", "l", "l"},
+        {" ", "l", " "},
+        {" ", "l", " "},
+        {" ", "l", "l"},
     }, {
-        {"", "", ""},
+        {" ", " ", " "},
         {"l", "l", "l"},
-        {"l", "", ""}
+        {"l", " ", " "}
     }, {
-        {"l", "l", ""},
-        {"", "l", ""},
-        {"", "l", ""}
+        {"l", "l", " "},
+        {" ", "l", " "},
+        {" ", "l", " "}
     }
     },
 
     o = {{
         {"o", "o"},
         {"o", "o"},
-        {"", ""}
+        {" ", " "}
     }, {
         {"o", "o"},
         {"o", "o"}
@@ -79,59 +80,59 @@ Maps ={
     },
 
     s = {{
-        {"", "s", "s"},
-        {"s", "s", ""},
-        {"", "", ""}
+        {" ", "s", "s"},
+        {"s", "s", " "},
+        {" ", " ", " "}
     }, {
-        {"", "s", ""},
-        {"", "s", "s"},
-        {"", "", "s"},
+        {" ", "s", " "},
+        {" ", "s", "s"},
+        {" ", " ", "s"},
     }, {
-        {"", "", ""},
-        {"", "s", "s"},
-        {"s", "s", ""}
+        {" ", " ", " "},
+        {" ", "s", "s"},
+        {"s", "s", " "}
     }, {
-        {"s", "", ""},
-        {"s", "s", ""},
-        {"", "s", ""}
+        {"s", " ", " "},
+        {"s", "s", " "},
+        {" ", "s", " "}
     }
     },
 
     t = {{
-        {"", "t", ""},
+        {" ", "t", " "},
         {"t", "t", "t"},
-        {"", "", ""}
+        {" ", " ", " "}
     }, {
-        {"", "t", ""},
-        {"", "t", "t"},
-        {"", "t", ""},
+        {" ", "t", " "},
+        {" ", "t", "t"},
+        {" ", "t", " "},
     }, {
-        {"", "", ""},
+        {" ", " ", " "},
         {"t", "t", "t"},
-        {"", "t", ""}
+        {" ", "t", " "}
     }, {
-        {"", "t", ""},
-        {"t", "t", ""},
-        {"", "t", ""}
+        {" ", "t", " "},
+        {"t", "t", " "},
+        {" ", "t", " "}
     }
     },
 
     z = {{
-        {"z", "z", ""},
-        {"", "z", "z"},
-        {"", "", ""}
+        {"z", "z", " "},
+        {" ", "z", "z"},
+        {" ", " ", " "}
     }, {
-        {"", "", "z"},
-        {"", "z", "z"},
-        {"", "z", ""},
+        {" ", " ", "z"},
+        {" ", "z", "z"},
+        {" ", "z", " "},
     }, {
-        {"", "", ""},
-        {"z", "z", ""},
-        {"", "z", "z"}
+        {" ", " ", " "},
+        {"z", "z", " "},
+        {" ", "z", "z"}
     }, {
-        {"", "z", ""},
-        {"z", "z", ""},
-        {"z", "", ""}
+        {" ", "z", " "},
+        {"z", "z", " "},
+        {"z", " ", " "}
     }}
 }
 
@@ -147,7 +148,6 @@ function Tetromino:new(maps)
     self:findkickmaps()
 
     self.rotation = 1
-    self.row = FIELDHEIGHT + 1 - 20
 
     self.speed = 1
     self.time_still = 0
@@ -158,9 +158,29 @@ function Tetromino:new(maps)
     self.evade_strength = 1
 
     -- tetrominos spawn on the center column, erring to the left
-    local width = #self.map[1][1]
-    local center = FIELDWIDTH * 0.5 + 1
-    self.col = math.floor(center - width * 0.5)
+    local width = #self.map[1]
+    local offset = FIELDWIDTH - width
+    self.col = math.floor(offset * 0.5) + 1
+
+    -- tetriminos spawn on the top of the screen
+    local whitespace = 0
+    for i,row in pairs(self.map[1]) do
+        -- calculate the amount of blank rows on top of the tetro map
+        local blanks = 0
+        for j, block in pairs(row) do
+            if block == " " then
+                blanks = blanks + 1
+            end
+        end
+        if blanks == width then
+            whitespace = whitespace + 1
+        else
+            break
+        end
+    end
+
+    self.row = FIELDHEIGHT + 1 - 20 - whitespace
+
 
     -- if there's no space, it can spawn one block higher
     if self:collides_at(self.row, self.col, self.rotation) then
@@ -186,7 +206,7 @@ function Tetromino:erase()
     for i,row in ipairs(self.map[self.rotation]) do
         for j,block in ipairs(row) do
             -- set field block to empty wherever a tetromino is
-            if block ~= "" then
+            if block ~= " " then
                 Field[self.row + i - 1][self.col + j - 1] = " "
             end
         end
@@ -200,7 +220,7 @@ function Tetromino:mark()
     for i,row in ipairs(self.map[self.rotation]) do
         for j,block in ipairs(row) do
             -- set field block to tetromino wherever tetromino is
-            if block ~= "" then
+            if block ~= " " then
                 Field[self.row + i - 1][self.col + j - 1] = block
                 -- io.write("Set!")
             end
@@ -214,7 +234,7 @@ end
 function Tetromino:collides_at(c_row, c_col, c_rotation)
     for i,row in ipairs(self.map[c_rotation]) do
         for j,block in ipairs(row) do
-            if block ~= ""  then
+            if block ~= " "  then
                 local y = c_row + i - 1
                 local x = c_col + j - 1
                 if not Field[y] or Field[y][x] ~= " " then

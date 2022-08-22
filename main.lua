@@ -84,7 +84,7 @@ function love.keypressed(key)
         Begin_overlay = 0
         GameStarting = true
     end
-    if Piece then
+    if Piece and GameStarted then
         if key == "left" then
             Piece:move("left")
         elseif key == "right" then
@@ -179,7 +179,9 @@ function love.draw()
     local woffset = math.floor(remainder * 0.5) + border*blocksize + 1
 
     love.graphics.push()
-    love.graphics.translate(woffset, -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize))
+    love.graphics.translate(woffset, 0)
+    love.graphics.push()
+    love.graphics.translate(0 , -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize))
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 
     -- colors of tetrominos (n is blank)
@@ -201,6 +203,7 @@ function love.draw()
             love.graphics.rectangle("fill", j * blocksize, (i - 1)*blocksize, blocksize, blocksize)
         end
     end
+    love.graphics.pop()
 
     -- don't draw anything past this if game isn't started yet
     if not GameStarted and not GameStarting then
@@ -208,18 +211,48 @@ function love.draw()
         return
     end
 
+
     local miniblocksize = math.ceil(blocksize * miniblockscale)
 
     --draw the held tetromino
     if Held then
-        local offset = -4
-        -- if 
+        -- center to 1 block before the top left corner of the playing field
+        --   the 1 block is to account for a barrier
+        love.graphics.push()
+        love.graphics.translate(0 , blocksize)
+
+        local width = #Held[1]
+        local offset = -width
+
+        -- scale the drawing according to the size of the piece
+        local heldblocksize
+        if width <= 4 then
+            -- drawing settings for normal-sized pieces
+            heldblocksize = miniblocksize
+        else
+            -- drawing settings for large pieces
+            heldblocksize = math.floor(4 / width)
+            -- block size is rounded down, but it should at least be 1
+            if heldblocksize < 1 then
+                heldblocksize = 1
+            end
+        end
+
+        -- draw the piece
+        for i,row in ipairs(Held[1]) do
+            for j, block in pairs(row) do
+                if block ~= " " then
+                    love.graphics.setColor(colors[block])
+                    love.graphics.rectangle("fill", (offset + j - 1) * heldblocksize, (i - 1) * heldblocksize, heldblocksize, heldblocksize)
+                end
+            end
+        end
+
+        love.graphics.pop()
     end
 
     -- draws next blocks
-    love.graphics.pop()
-    love.graphics.push()
-    love.graphics.translate(woffset + (FIELDWIDTH + 1) * blocksize, 0)
+    love.graphics.translate((FIELDWIDTH + 1) * blocksize, 0)
     love.graphics.setColor(1,1,1)
 
     local offset = 2
@@ -238,7 +271,7 @@ function love.draw()
         for i,row in pairs(tetromap) do
             offset = offset + 1
             for j,block in ipairs(row) do
-                if block ~= "" then
+                if block ~= " " then
                     love.graphics.rectangle("fill", (j + hoffset) * miniblocksize, offset * miniblocksize, miniblocksize, miniblocksize)
                 end
             end
