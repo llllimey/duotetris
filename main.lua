@@ -34,7 +34,7 @@ function love.load()
 
         -- upcoming tetrominos
         Queue = {}
-        Queue.pieces = {"t"}
+        Queue.pieces = {}
         -- appends queue with a 7 tetrominos in a random order
         function Queue:add_bag()
             local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -62,9 +62,9 @@ function love.load()
         Falltime = 0.3
     end
     Start()
-    for i,v in pairs(Queue.pieces) do
-        io.write(v)
-    end
+    -- for i,v in pairs(Queue.pieces) do
+    --     io.write(v)
+    -- end
     print()
 end
 
@@ -225,6 +225,10 @@ function love.draw()
     local offset = 2
     for i=1, 6 do
         local shape = Queue.pieces[i]
+        local hoffset = 0
+        if shape == "o" then
+            hoffset = 1
+        end
         if not colors[shape] then
             break
         end
@@ -235,7 +239,7 @@ function love.draw()
             offset = offset + 1
             for j,block in ipairs(row) do
                 if block ~= "" then
-                    love.graphics.rectangle("fill", j * miniblocksize, offset * miniblocksize, miniblocksize, miniblocksize)
+                    love.graphics.rectangle("fill", (j + hoffset) * miniblocksize, offset * miniblocksize, miniblocksize, miniblocksize)
                 end
             end
         end
