@@ -9,7 +9,7 @@ function love.load()
     Object = require "classic"
     
     require "tetrominos"
-    require "player"
+    require "player" -- also contains row clear function
 
     FIELDHEIGHT = 40
     FIELDHEIGHTVISIBLE = 20.25
@@ -34,7 +34,7 @@ function love.load()
 
         -- upcoming tetrominos
         Queue = {}
-        Queue.pieces = {}
+        Queue.pieces = {"i"}
         -- appends queue with a 7 tetrominos in a random order
         function Queue:add_bag()
             local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -82,6 +82,7 @@ function love.keypressed(key)
     -- start the game by pressing space
     if not GameStarting and not GameStarted and key == "space" then
         P1.piece = Tetromino(Maps[Queue:next()])
+        P1.piece:mark()
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
@@ -89,7 +90,7 @@ function love.keypressed(key)
 
     -- Controls
     if GameStarted then
-        -- P1 controls
+        -- P1 movement
         if P1.piece then
             if key == "left" then
                 P1.piece:move("left")
@@ -100,20 +101,32 @@ function love.keypressed(key)
             elseif key == "." then
                 P1.piece:spin("cw")
             end
-            if key == "rshift" and not P1.usedhold then
-                if not Held then
-                    Held = P1.piece.map
-                    P1.piece:erase()
-                    P1.piece = Tetromino(Maps[Queue:next()])
-                else
-                    local temp = Held
-                    Held = P1.piece.map
-                    P1.piece:erase()
-                    P1.piece = Tetromino(temp)
-                end
-                P1.usedhold = true
-            end
         end
+        -- P1 hold
+        if key == "rshift" and not P1.usedhold then
+            if not Held then
+                P1.piece:erase()
+                -- only switch pieces if piece can spawn
+                if not CanSpawn(Maps[Queue.pieces[1]]) then
+                    return
+                end
+                Held = P1.piece.map
+                P1.piece = Tetromino(Maps[Queue:next()])
+                P1.piece:mark()
+            else
+                -- only switch pieces if piece can spawn
+                P1.piece:erase()
+                if not CanSpawn(Held) then
+                    return
+                end
+                local temp = Held
+                Held = P1.piece.map
+                P1.piece = Tetromino(temp)
+                P1.piece:mark()
+            end
+            P1.usedhold = true
+        end
+
 
         -- P2 controls
         -- if P2.piece then
@@ -159,8 +172,10 @@ function love.update(dt)
         end
         return
     end
+
     -- don't update if player clicks out of game window
     if not Focus then return end
+
     -- don't update if game is over
     if GameOver then
         return
@@ -173,6 +188,9 @@ function love.update(dt)
     if P1.piece then
         P1:update(dt)
     end
+    -- if P2.piece then
+    --     P2:update(dt)
+    -- end
 end
 
 function love.draw()
@@ -295,6 +313,7 @@ function love.draw()
             end
         end
         if shape == "i" then offset = offset - 1 end
+        if shape == "o" then offset = offset + 1 end
     end
 
     

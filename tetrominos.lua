@@ -65,8 +65,7 @@ Maps ={
 
     o = {{
         {"o", "o"},
-        {"o", "o"},
-        {" ", " "}
+        {"o", "o"}
     }, {
         {"o", "o"},
         {"o", "o"}
@@ -158,10 +157,11 @@ function Tetromino:new(maps)
     self.evade_strength = 1
 
     -- tetrominos spawn on the center column, erring to the left
+    -- TODO: adjust spawn to account for other player
     local width = #self.map[1]
     local offset = FIELDWIDTH - width
     self.col = math.floor(offset * 0.5) + 1
-
+    
     -- tetriminos spawn on the top of the screen
     local whitespace = 0
     for i,row in pairs(self.map[1]) do
@@ -183,20 +183,19 @@ function Tetromino:new(maps)
 
 
     -- if there's no space, it can spawn one block higher
+    -- TODO: if there's no space, kick player to the side and/or up so long as the block
+    --        doesn't go beyond the spawning zone
+    -- TODO: if there's no space because it collides with another piece, then wait to spawn
+    -- TODO: only game over if both players are obstructed from spawning
     if self:collides_at(self.row, self.col, self.rotation) then
         if self:collides_at(self.row + 1, self.col, self.rotation) then
-            GameOver = true
-            print("Game over")
+            self.obstructed = true
+            print("Obstructed")
             -- print(self.col, self.row)
-            return false
         else
             self.row = self.row + 1
         end
     end
-
-    -- spawns
-    self:mark()
-    return true
 end
 
 
@@ -326,7 +325,7 @@ function Tetromino:findkickmaps()
     -- the furthest a tetromino can be kicked to is (maxkick - 1, maxkick) (x, y)
     local maxkick = self.maxkick
     local unsorted = {}
-    for x = -maxkick+1, maxkick-1 do
+    for x = -maxkick, maxkick do
         for y = -maxkick, maxkick do
             local kick = {}
             kick.x = x
@@ -396,10 +395,10 @@ function Tetromino:findkickmaps()
         end
     end
     
-    self.kickmaps = sort(unsorted, 1, #unsorted)
-    for i,v in pairs(self.kickmaps) do
-        -- print("("..v.x..", "..v.y..")")
-    end
+    -- self.kickmaps = sort(unsorted, 1, #unsorted)
+    -- for i,v in pairs(self.kickmaps) do
+    --     print("("..v.x..", "..v.y..")")
+    -- end
 end
 
 
