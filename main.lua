@@ -9,7 +9,7 @@ function love.load()
     Object = require "classic"
     
     require "tetrominos"
-    
+    require "player"
 
     FIELDHEIGHT = 40
     FIELDHEIGHTVISIBLE = 20.25
@@ -62,6 +62,8 @@ function love.load()
         Falltime = 0.3
     end
     Start()
+
+    P1 = Player()
     -- for i,v in pairs(Queue.pieces) do
     --     io.write(v)
     -- end
@@ -79,33 +81,65 @@ function love.keypressed(key)
     end
     -- start the game by pressing space
     if not GameStarting and not GameStarted and key == "space" then
-        Piece = Tetromino(Maps[Queue:next()])
+        P1.piece = Tetromino(Maps[Queue:next()])
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
     end
-    if Piece and GameStarted then
-        if key == "left" then
-            Piece:move("left")
-        elseif key == "right" then
-            Piece:move("right")
-        elseif key == "," then
-            Piece:spin("countercw")
-        elseif key == "." then
-            Piece:spin("cw")
-        end
-        if key == "m" then
-            if not Held then
-                Held = Piece.map
-                Piece:erase()
-                Piece = Tetromino(Maps[Queue:next()])
-            else
-                local temp = Held
-                Held = Piece.map
-                Piece:erase()
-                Piece = Tetromino(temp)
+
+    -- Controls
+    if GameStarted then
+        -- P1 controls
+        if P1.piece then
+            if key == "left" then
+                P1.piece:move("left")
+            elseif key == "right" then
+                P1.piece:move("right")
+            elseif key == "," then
+                P1.piece:spin("countercw")
+            elseif key == "." then
+                P1.piece:spin("cw")
+            end
+            if key == "rshift" and not P1.usedhold then
+                if not Held then
+                    Held = P1.piece.map
+                    P1.piece:erase()
+                    P1.piece = Tetromino(Maps[Queue:next()])
+                else
+                    local temp = Held
+                    Held = P1.piece.map
+                    P1.piece:erase()
+                    P1.piece = Tetromino(temp)
+                end
+                P1.usedhold = true
             end
         end
+
+        -- P2 controls
+        -- if P2.piece then
+        --     if key == "a" then
+        --         P1.piece:move("left")
+        --     elseif key == "d" then
+        --         P1.piece:move("right")
+        --     elseif key == "c" then
+        --         P1.piece:spin("countercw")
+        --     elseif key == "v" then
+        --         P1.piece:spin("cw")
+        --     end
+        --     if key == "lshift" then
+        --         if not Held and not P2.usedheld then
+        --             Held = P1.piece.map
+        --             P1.piece:erase()
+        --             P1.piece = Tetromino(Maps[Queue:next()])
+        --         else
+        --             local temp = Held
+        --             Held = P1.piece.map
+        --             P1.piece:erase()
+        --             P1.piece = Tetromino(temp)
+        --         end
+        --         P2.usedhold = true
+        --     end
+        -- end
     end
 end
 
@@ -135,25 +169,9 @@ function love.update(dt)
     tick.update(dt)
 
 
-    -- update existing piece
-    if Piece then
-        -- Piece.time_next_fall keeps track of how long until a piece should try to fall again
-        -- Piece.time_still keeps track of how long the piece hasn't fallen for
-        -- Piece locks if it is still for more than 0.5 seconds
-        if Piece.time_still > LOCKTIME then
-            Piece = Tetromino(Maps[Queue:next()])
-        else
-            Piece.time_still = Piece.time_still + dt
-            if not Piece.landed then
-                Piece.time_still = 0
-            end
-            if Piece.time_next_fall > 0 then
-                Piece.time_next_fall = Piece.time_next_fall - Piece.speed * dt
-            -- if it is time to fall, then try falling. If it falls, then timers need to reset to account for movement
-            elseif Piece:fall() then
-                Piece.time_next_fall = Falltime
-            end
-        end
+    -- update existing piece to fall or lock
+    if P1.piece then
+        P1:update(dt)
     end
 end
 
