@@ -290,8 +290,8 @@ function Tetromino:findkickmaps()
     -- the furthest a tetromino can be kicked to is (maxkick - 1, maxkick) (x, y)
     local maxkick = math.ceil(#self.map[1] * 0.5)
     local unsorted = {}
-    for x = 0, maxkick-1 do
-        for y = -x, maxkick do
+    for x = -maxkick+1, maxkick-1 do
+        for y = -maxkick, maxkick do
             local kick = {}
             kick.x = x
             kick.y = y
@@ -338,6 +338,12 @@ function Tetromino:findkickmaps()
                     elseif atemp[1].y < btemp[1].y then
                         kicks[i] = btemp[1]
                         table.remove(btemp, 1)
+                    elseif atemp[1].x > btemp[1].x then
+                        kicks[i] = atemp[1]
+                        table.remove(atemp, 1)
+                    elseif atemp[1].x < btemp[1].x then
+                        kicks[i] = btemp[1]
+                        table.remove(btemp, 1)
                     end
                 else
                     if not atemp[1] then
@@ -355,6 +361,9 @@ function Tetromino:findkickmaps()
     end
     
     self.kickmaps = sort(unsorted, 1, #unsorted)
+    for i,v in pairs(self.kickmaps) do
+        print("("..v.x..", "..v.y..")")
+    end
 end
 
 

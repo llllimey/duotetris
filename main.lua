@@ -29,7 +29,7 @@ function love.load()
 
     -- upcoming tetrominos
     Queue = {}
-    Queue.pieces = {"l"}
+    Queue.pieces = {"i"}
     -- appends queue with a 7 tetrominos in a random order
     function Queue:add_bag()
         local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -41,15 +41,15 @@ function love.load()
     end
     -- gives the upcoming tetromino
     function Queue:next()
-        next = self.pieces[1]
+        local p = self.pieces[1]
         table.remove(self.pieces, 1)
         -- also adds another bag to queue if need be
         if #self.pieces < 7 then
             self:add_bag()
         end
-        return next
+        return p
     end
-    Queue:add_bag()
+    -- Queue:add_bag()
     -- for i,v in pairs(Queue.pieces) do
     --     io.write(v)
     -- end
