@@ -58,6 +58,7 @@ function love.load()
 
         EVADE_MULTIPLIER = 0.8
         KICK_EVADE_MULTIPLIER = 0.9
+        ENHANCEDSPEED = 3
         LOCKTIME = 0.5
         Falltime = 0.3
     end
@@ -128,7 +129,10 @@ function love.keypressed(key)
             end
             P1.usedhold = true
         elseif key == "down" then
+            P1.piece.time_next_fall = 0
         elseif key == "up" then
+            while P1.piece:fall() do end
+            P1.piece.time_still = LOCKTIME + 1
         end
 
         P1:make_ghost()
@@ -193,6 +197,11 @@ function love.update(dt)
 
     -- update existing piece to fall or lock
     if P1.piece then
+        if love.keyboard.isDown("down") then
+            P1.piece.speed = ENHANCEDSPEED
+        else
+            P1.piece.speed = 1
+        end
         P1:update(dt)
     end
     -- if P2.piece then
