@@ -185,7 +185,6 @@ function Tetromino:new(maps)
     -- if there's no space, it can spawn one block higher
     -- TODO: if there's no space, kick player to the side and/or up so long as the block
     --        doesn't go beyond the spawning zone
-    -- TODO: if there's no space because it collides with another piece, then wait to spawn
     -- TODO: only game over if both players are obstructed from spawning
     if self:collides_at(self.row, self.col, self.rotation) then
         if self:collides_at(self.row + 1, self.col, self.rotation) then

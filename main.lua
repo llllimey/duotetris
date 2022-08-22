@@ -58,7 +58,7 @@ function love.load()
 
         EVADE_MULTIPLIER = 0.8
         KICK_EVADE_MULTIPLIER = 0.9
-        LOCKTIME = 0.7
+        LOCKTIME = 0.5
         Falltime = 0.3
     end
     Start()
@@ -82,11 +82,13 @@ function love.keypressed(key)
     -- start the game by pressing space
     if not GameStarting and not GameStarted and key == "space" then
         P1.piece = Tetromino(Maps[Queue:next()])
+        P1:make_ghost()
         P1.piece:mark()
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
     end
+
 
     -- Controls
     if GameStarted then
@@ -125,7 +127,11 @@ function love.keypressed(key)
                 P1.piece:mark()
             end
             P1.usedhold = true
+        elseif key == "down" then
+        elseif key == "up" then
         end
+
+        P1:make_ghost()
 
 
         -- P2 controls
@@ -153,6 +159,7 @@ function love.keypressed(key)
         --         P2.usedhold = true
         --     end
         -- end
+        -- P2:make_ghost()
     end
 end
 
@@ -191,6 +198,14 @@ function love.update(dt)
     -- if P2.piece then
     --     P2:update(dt)
     -- end
+
+    -- if both players can't spawn pieces, then the game is over
+    if P1.obstruced then
+        -- if P2 and not P2.obstructed then
+        --     return
+        -- end
+        GameOver = true
+    end
 end
 
 function love.draw()
@@ -217,12 +232,12 @@ function love.draw()
     love.graphics.push()
     love.graphics.translate(woffset, 0)
     love.graphics.push()
-    love.graphics.translate(0 , -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize))
+    love.graphics.translate(0 , -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize) - blocksize)
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        [" "] = {1, 1, 1},
+        [" "] = {1, 1, 1, 0.7},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
         t = {0.8, 0, 1},
@@ -232,13 +247,24 @@ function love.draw()
         l = {1, 0.62, 0}
     }
 
+    -- draws a white background for the playing field
+    love.graphics.setColor(1,1,1)
+    love.graphics.rectangle("fill", blocksize, blocksize, FIELDWIDTH * blocksize, FIELDHEIGHT * blocksize)
+    
+    -- draws the ghosts
+    --   they are rendered under the field
+    --   since the blank field is slightly transparent, the ghost shows through
+    P1:render_ghost(colors, blocksize)
+    -- if P2 then P2:render_ghost(colors, blocksize) end
+
     -- draws the playing field
     for i,row in ipairs(Field) do
         for j,block in pairs(row) do
             love.graphics.setColor(colors[block])
-            love.graphics.rectangle("fill", j * blocksize, (i - 1)*blocksize, blocksize, blocksize)
+            love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
         end
     end
+
     love.graphics.pop()
 
     -- don't draw anything past this if game isn't started yet
@@ -246,7 +272,6 @@ function love.draw()
         love.graphics.pop()
         return
     end
-
 
     local miniblocksize = math.ceil(blocksize * miniblockscale)
 
