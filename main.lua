@@ -29,7 +29,7 @@ function love.load()
 
     -- upcoming tetrominos
     Queue = {}
-    Queue.pieces = {}
+    Queue.pieces = {"l"}
     -- appends queue with a 7 tetrominos in a random order
     function Queue:add_bag()
         local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -50,6 +50,10 @@ function love.load()
         return next
     end
     Queue:add_bag()
+    -- for i,v in pairs(Queue.pieces) do
+    --     io.write(v)
+    -- end
+    -- print()
 
     EVADE_MULTIPLIER = 0.8
     LOCKTIME = 0.7
@@ -63,6 +67,9 @@ function love.keypressed(key)
     end
     if key == "space" then
         Piece = Tetromino(Queue:next())
+        for i,v in pairs(Piece.kickmaps) do
+            -- print("("..v.x..", ".. v.y..")")
+        end
     end
 
     if Piece then
@@ -111,6 +118,7 @@ function love.update(dt)
             end
         -- if tetrimino locks, player switches to new tetrimino
         else
+            GameOver = true
             Piece = Tetromino(Queue:next())
         end
     end

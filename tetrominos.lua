@@ -192,7 +192,7 @@ function Tetromino:mark()
             -- set field block to tetromino wherever tetromino is
             if block ~= "" then
                 Field[self.row + i - 1][self.col + j - 1] = block
-                -- io.write("Set!")
+                io.write("Set!")
             end
         end
     end
@@ -236,17 +236,17 @@ function Tetromino:fall()
     if self:collides_at(c_row, self.col, self.rotation) then
         -- collides, so stop falling:(
         self:mark()
-        print("collides :(")
         self.isfalling = false
+        -- print("hits ground :(")
         return false
     end
 
     -- doesn't collide, so fall :))
     self.row = c_row
     self:mark()
-    print("falls")
     self.isfalling = true
     self.evade_strength = 1
+    print("falls")
     return true
 end
 
@@ -300,16 +300,10 @@ function Tetromino:findkickmaps()
         end
     end
 
-    print("unsorted:")
-    for i,v in ipairs(unsorted) do
-        print("("..v.x..", "..v.y..") "..v.distance)
-    end
-
     -- merge sort unsorted kick maps by distance, then y value
     -- start and stop are indexes of the table to start and stop sorting at
     --  this is a bit weird on my brain since tables are pointers
     local function sort(kicks, start, stop)
-        print(start..", "..stop)
         local len = (stop - start) + 1
         if len == 1 then
             return kicks
@@ -361,10 +355,6 @@ function Tetromino:findkickmaps()
     end
     
     self.kickmaps = sort(unsorted, 1, #unsorted)
-
-    for i,v in ipairs(self.kickmaps) do
-        print("("..v.x..", "..v.y..") "..v.distance)
-    end
 end
 
 
@@ -375,9 +365,9 @@ function Tetromino:spin(direction)
 
     -- see which way it is spinning
     if direction == "cw" then
-        rot_mult = -1
-    elseif direction == "countercw" then
         rot_mult = 1
+    elseif direction == "countercw" then
+        rot_mult = -1
     else
         print("Tetromino:spin: direction error")
         return
@@ -404,36 +394,29 @@ function Tetromino:spin(direction)
 
     self:erase()
     -- check to see if it would collide after moving to new orientation
-    -- TODO: if it collides, try kicking the piece
+    -- if it collides, try kicking the piece
     -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
     --     and that amount -1 in the other
     --        this value is stored in self.kickmax
-
     local kickmaps = self.kickmaps
-    local row = self.col
+    local row = self.row
     local col = self.col
-    local length_kickmaps = #kickmaps
-    local kick = {}
-    for i = 1, length_kickmaps do
-        if not self:collides_at(row + kickmaps[i].y * y_mult, col + kickmaps[i].x * x_mult, c_rotation) then
+    for i,v in pairs(kickmaps) do
+        local xkick = v.x * x_mult
+        local ykick = v.y * y_mult
+        if not self:collides_at(row + ykick, col + xkick, c_rotation) then
             -- if it is able to find a working kick
-            -- break out of this godforsaken loop
-            kick.x = kickmaps[i].x
-            kick.y = kickmaps[i].y
+            -- set location to the working kick
+            -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
+            self.row = row + ykick
+            self.col = col + xkick
+            self.rotation = c_rotation
+            -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
             break
-        elseif i == length_kickmaps then
-            -- if no possible spot is found
-            -- then it can't spin :(((
-            self:mark()
-            return false
         end
     end
 
     -- doesn't collide, so move :))
-    self.col = self.col + kick.x
-    self.row = self.row + kick.y
-    self.rotation = c_rotation
-    print(self.col.." ".. self.row)
     self:mark()
 
     -- also, let piece not lock as fast if they're aboutta be locked
