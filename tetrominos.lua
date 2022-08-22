@@ -367,10 +367,10 @@ function Tetromino:findkickmaps()
                     elseif atemp[1].distance > btemp[1].distance then
                         kicks[i] = btemp[1]
                         table.remove(btemp, 1)
-                    elseif atemp[1].y > btemp[1].y then
+                    elseif atemp[1].y < btemp[1].y then
                         kicks[i] = atemp[1]
                         table.remove(atemp, 1)
-                    elseif atemp[1].y < btemp[1].y then
+                    elseif atemp[1].y > btemp[1].y then
                         kicks[i] = btemp[1]
                         table.remove(btemp, 1)
                     elseif atemp[1].x > btemp[1].x then
@@ -395,7 +395,7 @@ function Tetromino:findkickmaps()
         end
     end
     
-    -- self.kickmaps = sort(unsorted, 1, #unsorted)
+    self.kickmaps = sort(unsorted, 1, #unsorted)
     -- for i,v in pairs(self.kickmaps) do
     --     print("("..v.x..", "..v.y..")")
     -- end
@@ -456,7 +456,6 @@ function Tetromino:spin(direction)
             self.row = row + ykick
             self.col = col + xkick
             self.rotation = c_rotation
-            height_gained = ykick
             -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
             break
         end
