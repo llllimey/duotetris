@@ -278,7 +278,7 @@ function love.draw()
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        [" "] = {1, 1, 1, 0.7},
+        [" "] = {1, 1, 1, 0.6},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
         t = {0.8, 0, 1},
@@ -324,6 +324,11 @@ function love.draw()
 
     local miniblocksize = math.ceil(blocksize * miniblockscale)
 
+    -- draw the score
+    love.graphics.setColor(1,1,1)
+    love.graphics.print("Level "..Score.level, -90, height-50)
+    love.graphics.print("Score: "..Score.points, -90, height -30)
+
     --draw the held tetromino
     if Held then
         -- center to 1 block before the top left corner of the playing field
@@ -357,7 +362,6 @@ function love.draw()
                 end
             end
         end
-
         love.graphics.pop()
     end
 
