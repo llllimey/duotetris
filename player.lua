@@ -11,15 +11,20 @@ function Player:update(dt)
     -- self.piece.time_still keeps track of how long the piece hasn't fallen for
     -- self.piece locks if it is still for more than Locktime seconds
     if self.piece.time_still > Locktime then
-        -- if piece locks, then player is able to use hold pieces again
-        self.usedhold = false
-
-        -- check if piece landed by spinning
+        
         local rot = self.piece.rotation
         local row = self.piece.row
         local col = self.piece.col
         
+
         self.piece:erase() -- always gotta erase before checking collisions
+        -- don't lock if the piece can still fall downwards
+        if not self.piece:collides_at(row + 1, col, rot) then
+            self.piece:mark()
+            return
+        end
+
+        -- check if piece landed by spinning
         if      self.piece:collides_at(row - 1, col, rot) -- couldn't arrive by falling
             and self.piece:collides_at(row, col + 1, rot) -- couldn't arrive by moving left
             and self.piece:collides_at(row, col - 1, rot) -- couldn't arrive by moving right
@@ -29,6 +34,10 @@ function Player:update(dt)
             print("spin")
         end
         self.piece:mark()
+
+
+        -- if piece locks, then player is able to use hold pieces again
+        self.usedhold = false
 
         self.piece = nil   -- player has no piece
         TryRowClear()      -- try to clear a line, if possible
