@@ -288,6 +288,25 @@ function Tetromino:collides_at(c_row, c_col, c_rotation)
         end
     end
     return false
+    -- WhereMapOccupies(self.map[c_rotation], c_row, c_col, function ()
+    --     if not Field[y] or Field[y][x] ~= " " then
+    --         return true
+    -- end)
+end
+
+
+-- does a function(x, y) at spots occupied by the map, (x, y) being the coordinates of a tile
+function WhereMapOccupiesDo(map, row, col, f)
+    for i,r in pairs(map) do
+        for j,block in pairs(r) do
+            if block ~= " " then
+                local y = row + i - 1
+                local x = col + j - 1
+                if f(x, y) then return true
+                end
+            end
+        end
+    end
 end
 
 

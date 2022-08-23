@@ -46,13 +46,15 @@ function Player:update(dt)
         -- if it locks on to a player, then add the map to that player
         if self:onplayer() then
             self:givemap()
+            -- eg if p1 lands on p2, then all tiles belonging to p1 now belong to p2
+            -- so, don't need to p1:playererase() because is no longer any 1 on playerfield
         else
             -- if it isn't locked on to a player, then it must be on the ground
             -- so, try clearing rows
             TryRowClear()
+            self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
         end
-            
-        self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
+        
         self.piece = nil   -- player has no piece
         self:TryNewPiece() -- try to give player a new piece
     else
@@ -74,12 +76,16 @@ function Player:update(dt)
 end
 
 
--- checks if a player has landed on the other player
+-- checks if a player is on top of another player
 function Player:onplayer()
+    -- for each tile of the player calling this function, check if the tile
+    --   directly below belongs to a different player
+    -- for i,row in pairs(self.piece.map[self.piece.rotation]) do
+    --     for j, block in pairs(row) do
 end
 
 -- gives its map to the other player
-function Player:givemap(dimension)
+function Player:givemap()
 end
 
 
@@ -141,6 +147,8 @@ function TryRowClear()
         -- print(v)
         table.remove(Field, v)
         table.insert(Field, 1, emptyrow)
+        table.remove(Playerfield, v)
+        table.insert(Playerfield, 1, emptyrow)
     end
 
     -- if 4+ lines are cleared, then do a fun tetris effect
