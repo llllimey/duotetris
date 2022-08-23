@@ -14,15 +14,25 @@ function love.load()
     FIELDHEIGHT = 40
     FIELDHEIGHTVISIBLE = 20.25
     FIELDWIDTH = 10
-    function Start()
-        Field = {}
-        -- initialize field to blank area with walls on sides and bottom
+
+    -- a field is a blank table of field dimensions (blank is " ")
+    local FieldClass = Object:extend()
+    function FieldClass:new()
+        self = {}
         for i=1, FIELDHEIGHT do
-            table.insert(Field, {})
+            table.insert(self, {})
             for j=1, FIELDWIDTH do
-                Field[i][j] = " "
+                self[i][j] = " "
             end
         end
+    end
+
+    function Start()
+        -- Field stores everything on the field in the form of letter tiles or
+        Field = FieldClass()
+
+        -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
+        Playerfield = FieldClass()
 
         -- -- print field for debugging
         -- for i = 1, #Field do

@@ -45,9 +45,8 @@ function Player:update(dt)
         self.piece = nil   -- player has no piece
 
         -- if it locks on to a player, then add the map to that player
-        local dimension = self:onplayer() -- don't question how this works
-        if dimension then
-            self:addmap(dimension)
+        if self:onplayer() then
+            self:givemap()
         else
             -- if it isn't locked on to a player, then it must be on the ground
             -- so, try clearing rows
@@ -73,21 +72,13 @@ function Player:update(dt)
     end
 end
 
--- creates a copy of the field that only contains the players
-local Dimension = Object:extend()
-
-function Dimension:new()
-    
-end
 
 -- checks if a player has landed on the other player
--- returns a dimension if the player has landed on the other, returns nothing otherwise
 function Player:onplayer()
-    -- if true, return dimension (so that addmap() doesn't have to render dimension again)
 end
 
--- adds map of other player to itself
-function Player:addmap(dimension)
+-- gives its map to the other player
+function Player:givemap(dimension)
 end
 
 
@@ -100,6 +91,7 @@ function Player:TryNewPiece()
 
     -- new piece spawns 
     Player.obstructed = false
+    self.piece:playererase()
     self.piece = Tetromino(Maps[Queue:next()], self.n)
     self.piece:mark()
     -- don't forget to make a ghost
@@ -116,10 +108,8 @@ function CanSpawn(map, player)
 end
 
 -- clears rows if they are filled
+-- if the other player is in the row, they get removed with it
 function TryRowClear(otherp)
-    if otherp then
-        otherp.piece:erase()
-    end
     local fullrows = {}
     for i = 1, FIELDHEIGHT do
         -- if a row is full of blocks, then keep track of it
@@ -209,10 +199,6 @@ function TryRowClear(otherp)
     end
 
     print(Score.points, Score.lines, Score.level)
-
-    if otherp then
-        otherp.piece:mark()
-    end
 end
 
 

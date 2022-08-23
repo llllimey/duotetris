@@ -145,6 +145,7 @@ function Tetromino:new(maps, player)
     self.map = maps
     self.maxkick = math.ceil(#self.map[1] * 0.5)
     self:findkickmaps()
+    self.p = player -- which player the tetromino belongs to
 
     self.rotation = 1
 
@@ -202,7 +203,7 @@ function Tetromino:new(maps, player)
 end
 
 
--- removes tetromino from the field
+-- removes tetromino from both fields
 --  use together with mark() to ensure tetromino doesn't leave a ghost behind
 function Tetromino:erase()
     for i,row in ipairs(self.map[self.rotation]) do
@@ -210,13 +211,13 @@ function Tetromino:erase()
             -- set field block to empty wherever a tetromino is
             if block ~= " " then
                 Field[self.row + i - 1][self.col + j - 1] = " "
+                Playerfield[self.row + i - 1][self.col + j - 1] = " "
             end
         end
     end
 end
 
-
--- marks tetromino on the field
+-- marks tetromino on both fields
 --   does not check for collision
 function Tetromino:mark()
     for i,row in ipairs(self.map[self.rotation]) do
@@ -224,12 +225,25 @@ function Tetromino:mark()
             -- set field block to tetromino wherever tetromino is
             if block ~= " " then
                 Field[self.row + i - 1][self.col + j - 1] = block
+                Field[self.row + i - 1][self.col + j - 1] = self.p
                 -- io.write("Set!")
             end
         end
     end
 end
 
+-- only erases tetro from the player field
+--   used when piece locks
+function Tetromino:playererase()
+    for i,row in ipairs(self.map[self.rotation]) do
+        for j,block in ipairs(row) do
+            -- set field block to empty wherever a tetromino is
+            if block ~= " " then
+                Playerfield[self.row + i - 1][self.col + j - 1] = " "
+            end
+        end
+    end
+end
 
 -- checks if the tetromino will collide at a certain location/rotation
 --  returns true if it will collide, false if it won't collide
