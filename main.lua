@@ -5,7 +5,6 @@ io.stdout:setvbuf("no")
 function love.load()
     love.window.setMode(504, 486)
 
-    tick = require "tick"
     Object = require "classic"
     
     require "tetrominos"
@@ -248,8 +247,7 @@ function love.update(dt)
     if GameOver then
         return
     end
-
-    tick.update(dt)
+    
 
     -- update event effects
     for i,v in ipairs(Event) do
@@ -324,11 +322,11 @@ function love.draw()
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        [" "] = {1, 1, 1, 0.6},
+        [" "] = {1, 1, 1, 0.7},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
         t = {0.8, 0, 1},
-        s = {0.15, 1, 0},
+        s = {0.1, 1, 0},
         z = {255, 0, 0.35},
         j = {0, 0.15, 1},
         l = {1, 0.62, 0}

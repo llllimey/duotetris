@@ -199,7 +199,6 @@ function Tetromino:new(maps, player)
 
     -- if the normal spawn location is unavailable, kick to the nearest spot
     -- if the normal range of kicks doesn't work, try moving to the left/right and try again
-    self.spawned = false
 
     local to_edge = col
     if player == 2 then
@@ -216,22 +215,20 @@ function Tetromino:new(maps, player)
     self.col = col
     for i = 1, to_edge do
         if self:spin("countercw") then
-            print("ccw")
+            -- print("ccw")
             self.obstructed = false
             return
         end
         self.obstructed = true
         self.col = self.col + pdirection
     end
-
-    self.spawned = true
 end
 
--- does a function(x, y, block) at spots occupied by the map, 
--- (x, y) being the coordinates of a tile, block being what is at that tile.
+-- does a function(x, y, block) for block occupied by a map,
+-- (x, y) being the coordinates of a tile on the field, block being what is at that tile.
 -- can return true if f() returns true, returns nothing otherwise.
 -- useful so i don't have to rewrite the loop for iterating through the block
-function WhereMapOccupiesDo(map, col, row, f)
+function ForMapOccupiesDo(map, col, row, f)
     for i,r in pairs(map) do
         for j,block in pairs(r) do
             if block ~= " " then
@@ -247,7 +244,7 @@ end
 -- removes tetromino from both fields
 --  use together with mark() to ensure tetromino doesn't leave a ghost behind
 function Tetromino:erase()
-    WhereMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
         Field[y][x] = " "
         Playerfield[x][y] = " "
     end)
@@ -256,7 +253,7 @@ end
 -- marks tetromino on both fields
 --   does not check for collision
 function Tetromino:mark()
-    WhereMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
+    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
         Field[y][x] = block
         Playerfield[y][x] = self.p
     end)
@@ -265,7 +262,7 @@ end
 -- only erases tetro from the player field
 --   used when piece locks
 function Tetromino:playererase()
-    WhereMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
         Playerfield[y][x] = " "
     end)
 end
@@ -273,7 +270,7 @@ end
 -- checks if the tetromino will collide at a certain location/rotation
 --  returns true if it will collide, false if it won't collide
 function Tetromino:collides_at(c_row, c_col, c_rotation)
-    if WhereMapOccupiesDo(self.map[c_rotation], c_col, c_row, function (x, y)
+    if ForMapOccupiesDo(self.map[c_rotation], c_col, c_row, function (x, y)
         if not Field[y] or Field[y][x] ~= " " then
             return true
         end
@@ -478,7 +475,7 @@ function Tetromino:spin(direction)
         end
     end
 
-    if self.spawned then self:erase() end
+    if not self.obstructed then self:erase() end
     -- check to see if it would collide after moving to new orientation
     -- if it collides, try kicking the piece
     -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
@@ -500,7 +497,7 @@ function Tetromino:spin(direction)
 
 
             -- if here from trying to spawn, return true for it is able to be kicked
-            if not self.spawned then
+            if self.obstructed then
                 return true
             end
             -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
@@ -509,7 +506,7 @@ function Tetromino:spin(direction)
     end
 
     -- if here from trying to spawn, return false for it is not able to be kicked
-    if not self.spawned then
+    if self.obstructed then
         return false
     end
 

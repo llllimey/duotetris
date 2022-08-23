@@ -78,14 +78,20 @@ end
 
 -- checks if a player is on top of another player
 function Player:onplayer()
-    -- for each tile of the player calling this function, check if the tile
-    --   directly below belongs to a different player
-    -- for i,row in pairs(self.piece.map[self.piece.rotation]) do
-    --     for j, block in pairs(row) do
+    local me = self.n
+    return ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
+        local underme = Playerfield[y + 1][x]
+        if underme ~= " "              -- if there is a player under me
+            and me - underme ~= 0 then -- and the player is not me
+            return true                -- then i am on another player
+        end
+    end)
 end
 
 -- gives its map to the other player
 function Player:givemap()
+    -- update map
+    -- update kickmaps (call findkickmaps)
 end
 
 
@@ -223,7 +229,7 @@ function Player:make_ghost()
     ghost.x = self.piece.col
 
     -- move ghost downwards until it can't anymore (would collide if it moved further down)
-    while not WhereMapOccupiesDo(ghost.map, ghost.x, ghost.y + 1, function(x, y)
+    while not ForMapOccupiesDo(ghost.map, ghost.x, ghost.y + 1, function(x, y)
         if not Field[y] or Field[y][x] ~= " " then
             return true
         end
@@ -242,7 +248,7 @@ end
 -- renders a ghost
 function Player:render_ghost(colors, blocksize)
     if self.piece and self.ghost then
-        WhereMapOccupiesDo(self.ghost.map, self.ghost.x, self.ghost.y, function(x, y, block)
+        ForMapOccupiesDo(self.ghost.map, self.ghost.x, self.ghost.y, function(x, y, block)
             love.graphics.setColor(colors[block])
             love.graphics.rectangle("fill", x * blocksize, y * blocksize, blocksize, blocksize)
         end)
