@@ -1,5 +1,9 @@
 Player = Object:extend()
 
+function Player:new(n)
+    self.n =  n
+end
+
 -- updates tetromino to fall or lock
 function Player:update(dt)
     if Player.obstructed then
@@ -11,11 +15,9 @@ function Player:update(dt)
     -- self.piece.time_still keeps track of how long the piece hasn't fallen for
     -- self.piece locks if it is still for more than Locktime seconds
     if self.piece.time_still > Locktime then
-        
         local rot = self.piece.rotation
         local row = self.piece.row
         local col = self.piece.col
-        
 
         self.piece:erase() -- always gotta erase before checking collisions
         -- don't lock if the piece can still fall downwards
@@ -23,6 +25,8 @@ function Player:update(dt)
             self.piece:mark()
             return
         end
+
+        -- from henceforth, the piece is locked
 
         -- check if piece landed by spinning
         if      self.piece:collides_at(row - 1, col, rot) -- couldn't arrive by falling
@@ -35,12 +39,21 @@ function Player:update(dt)
         end
         self.piece:mark()
 
-
         -- if piece locks, then player is able to use hold pieces again
         self.usedhold = false
 
         self.piece = nil   -- player has no piece
-        TryRowClear()      -- try to clear a line, if possible
+
+        -- if it locks on to a player, then add the map to that player
+        local dimension = self:onplayer() -- don't question how this works
+        if dimension then
+            self:addmap(dimension)
+        else
+            -- if it isn't locked on to a player, then it must be on the ground
+            -- so, try clearing rows
+            TryRowClear()
+        end
+            
         self:TryNewPiece() -- try to give player a new piece
     else
         self.piece.time_still = self.piece.time_still + dt
@@ -52,28 +65,50 @@ function Player:update(dt)
         -- if it is time to fall, then try falling. If it falls, then timers need to reset to account for movement
         elseif self.piece:fall() then
             self.piece.time_next_fall = Falltime
+
+            -- also gotta update the ghosts
+            P1:make_ghost()
+            P2:make_ghost()
         end
     end
 end
 
+-- creates a copy of the field that only contains the players
+local Dimension = Object:extend()
+
+function Dimension:new()
+    
+end
+
+-- checks if a player has landed on the other player
+-- returns a dimension if the player has landed on the other, returns nothing otherwise
+function Player:onplayer()
+    -- if true, return dimension (so that addmap() doesn't have to render dimension again)
+end
+
+-- adds map of other player to itself
+function Player:addmap(dimension)
+end
+
+
 function Player:TryNewPiece()
     -- checks if new piece can spawn. If it can't, then don't do anything
-    if not CanSpawn(Maps[Queue.pieces[1]]) then
+    if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         Player.obstruced = true
         return
     end
 
     -- new piece spawns 
     Player.obstructed = false
-    self.piece = Tetromino(Maps[Queue:next()])
+    self.piece = Tetromino(Maps[Queue:next()], self.n)
     self.piece:mark()
     -- don't forget to make a ghost
     self:make_ghost()
 end
 
 -- checks to see if a map of a tetromino can spawn
-function CanSpawn(map)
-    local check = Tetromino(map)
+function CanSpawn(map, player)
+    local check = Tetromino(map, player)
     if check.obstructed then
         return false
     end

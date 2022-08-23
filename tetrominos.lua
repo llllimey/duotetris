@@ -141,7 +141,7 @@ Tetromino = Object:extend()
 
 -- spawns a tetromino given a type (i, o, j, etc)
 --   row is on the y axis, col is on the x axis
-function Tetromino:new(maps)
+function Tetromino:new(maps, player)
     self.map = maps
     self.maxkick = math.ceil(#self.map[1] * 0.5)
     self:findkickmaps()
@@ -156,11 +156,20 @@ function Tetromino:new(maps)
 
     self.evade_strength = 1
 
-    -- tetrominos spawn on the center column, erring to the left
-    -- TODO: adjust spawn to account for other player
+    -- tetrominos spawn on the center of their side, erring away from the middle
     local width = #self.map[1]
-    local offset = FIELDWIDTH - width
-    self.col = math.floor(offset * 0.5) + 1
+    local offset
+    local col
+    if player == 1 then
+        offset = FIELDWIDTH * 1.5 - width
+        col = math.ceil(offset * 0.5) + 1
+    elseif player == 2 then
+        offset = FIELDWIDTH * 0.5 - width
+        col = math.floor(offset * 0.5) + 1
+    else
+        print("create piece: player number error")
+    end
+    self.col = col
     
     -- tetriminos spawn on the top of the screen
     local whitespace = 0
@@ -182,16 +191,12 @@ function Tetromino:new(maps)
     self.row = FIELDHEIGHT + 1 - 20 - whitespace
 
 
-    -- if there's no space, it can spawn one block higher
-    -- TODO: if there's no space, kick player to the side and/or up so long as the block
-    --        doesn't go beyond the spawning zone
-    if self:collides_at(self.row, self.col, self.rotation) then
-        if self:collides_at(self.row + 1, self.col, self.rotation) then
+    -- if the normal spawn location is unavailable, kick to the nearest spot
+    if not self:spin("kick "..player) then
+        -- if a kick doesn't work, try a rotation kick
+        if not self:spin("countercw") then
+            -- if rotation doesn't work, then the piece is truly obstructed
             self.obstructed = true
-            -- print("Obstructed")
-            -- print(self.col, self.row)
-        else
-            self.row = self.row + 1
         end
     end
 end
@@ -410,7 +415,7 @@ function Tetromino:spin(direction)
         rot_mult = 1
     elseif direction == "countercw" then
         rot_mult = -1
-    else
+    elseif direction ~= "kick 1" and direction ~= "kick 2" then
         print("Tetromino:spin: direction error")
         return
     end
@@ -433,8 +438,18 @@ function Tetromino:spin(direction)
         y_mult = -1
     end
 
+    -- special cases for kicks without specified rotation
+    if rot_mult == 0 then
+        c_rotation = self.rotation
+        y_mult = 1
+        if direction == "kick 1" then
+            x_mult = -1
+        elseif direction == "kick 2" then
+            x_mult = 1
+        end
+    end
 
-    self:erase()
+    if rot_mult ~= 0 then self:erase() end
     -- check to see if it would collide after moving to new orientation
     -- if it collides, try kicking the piece
     -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
@@ -443,7 +458,6 @@ function Tetromino:spin(direction)
     local kickmaps = self.kickmaps
     local row = self.row
     local col = self.col
-    local height_gained
     for i,v in pairs(kickmaps) do
         local xkick = v.x * x_mult
         local ykick = v.y * y_mult
@@ -454,9 +468,20 @@ function Tetromino:spin(direction)
             self.row = row + ykick
             self.col = col + xkick
             self.rotation = c_rotation
+
+
+            -- for spinless kicks, return true for it is able to be kicked
+            if rot_mult == 0 then
+                return true
+            end
             -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
             break
         end
+    end
+
+    -- for spinless kicks, return false for it is not able to be kicked
+    if rot_mult == 0 then
+        return false
     end
 
     -- check if it is now touching the gound

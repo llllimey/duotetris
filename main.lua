@@ -72,7 +72,8 @@ function love.load()
     Event[1] = {color = {1, 0, 1, 0.08}, mult = 1} -- spin
     Event[2] = {color = {0, 1, 1, 0.1}} -- tetris
 
-    P1 = Player()
+    P1 = Player(1)
+    P2 = Player(2)
     -- for i,v in pairs(Queue.pieces) do
     --     io.write(v)
     -- end
@@ -95,9 +96,12 @@ function love.keypressed(key)
     end
     -- start the game by pressing space
     if not GameStarting and not GameStarted and key == "space" then
-        P1.piece = Tetromino(Maps[Queue:next()])
+        P1.piece = Tetromino(Maps[Queue:next()], 1)
+        P2.piece = Tetromino(Maps[Queue:next()], 2)
         P1:make_ghost()
+        P2:make_ghost()
         P1.piece:mark()
+        P2.piece:mark()
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
@@ -123,21 +127,21 @@ function love.keypressed(key)
             if not Held then
                 P1.piece:erase()
                 -- only switch pieces if piece can spawn
-                if not CanSpawn(Maps[Queue.pieces[1]]) then
+                if not CanSpawn(Maps[Queue.pieces[1]], 1) then
                     return
                 end
                 Held = P1.piece.map
-                P1.piece = Tetromino(Maps[Queue:next()])
+                P1.piece = Tetromino(Maps[Queue:next()], 1)
                 P1.piece:mark()
             else
                 -- only switch pieces if piece can spawn
                 P1.piece:erase()
-                if not CanSpawn(Held) then
+                if not CanSpawn(Held, 1) then
                     return
                 end
                 local temp = Held
                 Held = P1.piece.map
-                P1.piece = Tetromino(temp)
+                P1.piece = Tetromino(temp, 1)
                 P1.piece:mark()
             end
             P1.usedhold = true
@@ -149,34 +153,51 @@ function love.keypressed(key)
         end
 
         P1:make_ghost()
-
+        P2:make_ghost()
 
         -- P2 controls
-        -- if P2.piece then
-        --     if key == "a" then
-        --         P1.piece:move("left")
-        --     elseif key == "d" then
-        --         P1.piece:move("right")
-        --     elseif key == "c" then
-        --         P1.piece:spin("countercw")
-        --     elseif key == "v" then
-        --         P1.piece:spin("cw")
-        --     end
-        --     if key == "lshift" then
-        --         if not Held and not P2.usedheld then
-        --             Held = P1.piece.map
-        --             P1.piece:erase()
-        --             P1.piece = Tetromino(Maps[Queue:next()])
-        --         else
-        --             local temp = Held
-        --             Held = P1.piece.map
-        --             P1.piece:erase()
-        --             P1.piece = Tetromino(temp)
-        --         end
-        --         P2.usedhold = true
-        --     end
-        -- end
-        -- P2:make_ghost()
+        if P2.piece then
+            if key == "a" then
+                P2.piece:move("left")
+            elseif key == "d" then
+                P2.piece:move("right")
+            elseif key == "c" then
+                P2.piece:spin("countercw")
+            elseif key == "v" then
+                P2.piece:spin("cw")
+            end
+            if key == "lshift" and not P2.usedhold then
+                if not Held then
+                    P2.piece:erase()
+                    -- only switch pieces if piece can spawn
+                    if not CanSpawn(Maps[Queue.pieces[1]], 2) then
+                        return
+                    end
+                    Held = P2.piece.map
+                    P2.piece = Tetromino(Maps[Queue:next()], 2)
+                    P2.piece:mark()
+                else
+                    -- only switch pieces if piece can spawn
+                    P2.piece:erase()
+                    if not CanSpawn(Held, 2) then
+                        return
+                    end
+                    local temp = Held
+                    Held = P2.piece.map
+                    P2.piece = Tetromino(temp, 2)
+                    P2.piece:mark()
+                end
+                P2.usedhold = true
+            elseif key == "s" then
+                P2.piece.time_next_fall = 0
+            elseif key == "w" then
+                while P2.piece:fall() do end
+                P2.piece.time_still = Locktime + 1
+            end
+        end
+
+        P1:make_ghost()
+        P2:make_ghost()
     end
 end
 
@@ -232,15 +253,20 @@ function love.update(dt)
         end
         P1:update(dt)
     end
-    -- if P2.piece then
-    --     P2:update(dt)
-    -- end
+    if P2.piece then
+        if love.keyboard.isDown("s") then
+            P2.piece.speed = ENHANCEDSPEED
+        else
+            P2.piece.speed = 1
+        end
+        P2:update(dt)
+    end
 
     -- if both players can't spawn pieces, then the game is over
     if P1.obstruced then
-        -- if P2 and not P2.obstructed then
-        --     return
-        -- end
+        if P2 and not P2.obstructed then
+            return
+        end
         GameOver = true
     end
 end
@@ -304,7 +330,7 @@ function love.draw()
     --   they are rendered under the field
     --   since the blank field is slightly transparent, the ghost shows through
     P1:render_ghost(colors, blocksize)
-    -- if P2 then P2:render_ghost(colors, blocksize) end
+    P2:render_ghost(colors, blocksize)
 
     -- draws the playing field
     for i,row in ipairs(Field) do
