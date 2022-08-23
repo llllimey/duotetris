@@ -67,8 +67,8 @@ function love.load()
     Start()
 
     Event = {}  -- keeps track of events that need graphics
-    Event.spin = {color = {1, 0, 1, 0.08}}
-    Event.tetris = {color = {0, 1, 1, 0.1}}
+    Event[1] = {color = {1, 0, 1, 0.08}} -- spin
+    Event[2] = {color = {0, 1, 1, 0.1}} -- tetris
 
     P1 = Player()
     -- for i,v in pairs(Queue.pieces) do
@@ -78,10 +78,10 @@ end
 
 function love.keypressed(key)
     -- if key == "s" then
-    --     Event.spin.yes = true
+    --     Event[1].yes = true
     -- end
     -- if key == "t" then
-    --     Event.tetris.yes = true
+    --     Event[2].yes = true
     -- end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
@@ -207,7 +207,7 @@ function love.update(dt)
 
     -- update event effects
     for i,v in ipairs(Event) do
-        if v.yes then
+        if v.yes == true then
             if not v.time then
                 v.time = 0
             end
