@@ -109,7 +109,7 @@ end
 
 -- clears rows if they are filled
 -- if the other player is in the row, they get removed with it
-function TryRowClear(otherp)
+function TryRowClear()
     local fullrows = {}
     for i = 1, FIELDHEIGHT do
         -- if a row is full of blocks, then keep track of it
@@ -180,11 +180,11 @@ function TryRowClear(otherp)
 
     -- keep track of level and falltime
     while linescleared > 0 do
-        print(Score.tonextlevel, linescleared)
+        -- print(Score.tonextlevel, linescleared)
         Score.tonextlevel = Score.tonextlevel - linescleared
-        print(Score.tonextlevel)
+        -- print(Score.tonextlevel)
         if Score.tonextlevel <= 0 then
-            print(Score.tonextlevel)
+            -- print(Score.tonextlevel)
             linescleared = -Score.tonextlevel
             Score.level = Score.level + 1
             Score.tonextlevel = (Score.level + 1) * 10
@@ -197,8 +197,6 @@ function TryRowClear(otherp)
             linescleared = 0
         end
     end
-
-    print(Score.points, Score.lines, Score.level)
 end
 
 

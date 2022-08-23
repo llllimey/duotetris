@@ -15,6 +15,7 @@ function love.load()
     FIELDHEIGHTVISIBLE = 20.25
     FIELDWIDTH = 10
 
+
     -- a field is a blank table of field dimensions (blank is " ")
     local FieldClass = Object:extend()
     function FieldClass:new()
@@ -27,63 +28,69 @@ function love.load()
         end
     end
 
-    function Start()
-        -- Field stores everything on the field in the form of letter tiles or
-        Field = FieldClass()
 
-        -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
-        Playerfield = FieldClass()
+    -- Field stores everything on the field in the form of letter tiles or
+    Field = FieldClass()
 
-        -- -- print field for debugging
-        -- for i = 1, #Field do
-        --     for j,block in pairs(Field[i]) do
-        --         io.write(block.." ")
-        --     end
-        --     print("|"..i)
-        -- end
+    -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
+    Playerfield = FieldClass()
 
-        -- upcoming tetrominos
-        Queue = {}
-        Queue.pieces = {}
-        -- appends queue with a 7 tetrominos in a random order
-        function Queue:add_bag()
-            local bag = {"i", "o", "t", "s", "z", "j", "l"}
-            for i = #bag, 1, -1 do
-                local random = love.math.random(i)
-                table.insert(self.pieces, bag[random])
-                table.remove(bag, random)
-            end
+
+    -- -- print field for debugging
+    -- for i = 1, #Field do
+    --     for j,block in pairs(Field[i]) do
+    --         io.write(block.." ")
+    --     end
+    --     print("|"..i)
+    -- end
+
+    -- upcoming tetrominos
+    Queue = {}
+    Queue.pieces = {}
+    -- appends queue with a 7 tetrominos in a random order
+    function Queue:add_bag()
+        local bag = {"i", "o", "t", "s", "z", "j", "l"}
+        for i = #bag, 1, -1 do
+            local random = love.math.random(i)
+            table.insert(self.pieces, bag[random])
+            table.remove(bag, random)
         end
-        -- gives the upcoming tetromino
-        function Queue:next()
-            local p = self.pieces[1]
-            table.remove(self.pieces, 1)
-            -- also adds another bag to queue if need be
-            if #self.pieces < 7 then
-                self:add_bag()
-            end
-            return p
-        end
-        Queue:add_bag()
-
-        EVADE_MULTIPLIER = 0.8
-        KICK_EVADE_MULTIPLIER = 0.9
-        ENHANCEDSPEED = 20
-        Locktime = 0.5
-
-        Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
-        LINEPOINTMULT = 130 -- how many extra points per extra line cleared
-        SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
-        Falltime = 1
     end
-    Start()
+    -- gives the upcoming tetromino
+    function Queue:next()
+        local p = self.pieces[1]
+        table.remove(self.pieces, 1)
+        -- also adds another bag to queue if need be
+        if #self.pieces < 7 then
+            self:add_bag()
+        end
+        return p
+    end
+    Queue:add_bag()
+
+    EVADE_MULTIPLIER = 0.8
+    KICK_EVADE_MULTIPLIER = 0.9
+    ENHANCEDSPEED = 20
+    Locktime = 0.5
+
+    Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
+    LINEPOINTMULT = 130 -- how many extra points per extra line cleared
+    SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
+    Falltime = 1
+
 
     Event = {}  -- keeps track of events that need graphics
     Event[1] = {color = {1, 0, 1, 0.08}, mult = 1} -- spin
     Event[2] = {color = {0, 1, 1, 0.1}} -- tetris
 
+
     P1 = Player(1)
     P2 = Player(2)
+
+    GameOver = false
+    GameStarting = false
+    GameStarted = false
+
     -- for i,v in pairs(Queue.pieces) do
     --     io.write(v)
     -- end
@@ -99,8 +106,7 @@ function love.keypressed(key)
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
-            Start()
-            GameOver = false
+            love.load()
         end
         return
     end
@@ -273,10 +279,7 @@ function love.update(dt)
     end
 
     -- if both players can't spawn pieces, then the game is over
-    if P1.obstruced then
-        if P2 and not P2.obstructed then
-            return
-        end
+    if P1.obstruced and P2.obstructed then
         GameOver = true
     end
 end
@@ -314,7 +317,7 @@ function love.draw()
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        [" "] = {1, 1, 1, 0.7},
+        [" "] = {1, 1, 1, 0.6},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
         t = {0.8, 0, 1},
@@ -360,6 +363,11 @@ function love.draw()
 
     local miniblocksize = math.ceil(blocksize * miniblockscale)
 
+    -- draw the score
+    love.graphics.setColor(1,1,1)
+    love.graphics.print("Level "..Score.level, -90, height-50)
+    love.graphics.print("Score: "..Score.points, -90, height -30)
+
     --draw the held tetromino
     if Held then
         -- center to 1 block before the top left corner of the playing field
@@ -393,7 +401,6 @@ function love.draw()
                 end
             end
         end
-
         love.graphics.pop()
     end
 
