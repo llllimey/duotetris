@@ -61,17 +61,28 @@ function love.load()
         ENHANCEDSPEED = 3
         LOCKTIME = 0.5
         Falltime = 0.3
+        
+        -- Score = 0
     end
     Start()
+
+    Event = {}  -- keeps track of events that need graphics
+    Event.spin = {color = {1, 0, 1, 0.08}}
+    Event.tetris = {color = {0, 1, 1, 0.1}}
 
     P1 = Player()
     -- for i,v in pairs(Queue.pieces) do
     --     io.write(v)
     -- end
-    print()
 end
 
 function love.keypressed(key)
+    -- if key == "s" then
+    --     Event.spin.yes = true
+    -- end
+    -- if key == "t" then
+    --     Event.tetris.yes = true
+    -- end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -194,6 +205,21 @@ function love.update(dt)
 
     tick.update(dt)
 
+    -- update event effects
+    for i,v in pairs(Event) do
+        if v.yes then
+            if not v.time then
+                v.time = 0
+            end
+            -- events lasts for 0.3 seconds
+            if v.time > 0.3 then
+                v.time = 0
+                v.yes = false
+                return
+            end
+            v.time = v.time + dt
+        end
+    end
 
     -- update existing piece to fall or lock
     if P1.piece then
@@ -238,11 +264,15 @@ function love.draw()
     local remainder = width - display_width_blocks * blocksize
     local woffset = math.floor(remainder * 0.5) + border*blocksize + 1
 
-    love.graphics.push()
-    love.graphics.translate(woffset, 0)
-    love.graphics.push()
-    love.graphics.translate(0 , -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize) - blocksize)
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
+
+    -- event effects
+    for i,v in pairs(Event) do
+        if v.yes then
+            love.graphics.setColor(v.color)
+            love.graphics.rectangle("fill", 0, 0, width, height)
+        end
+    end
 
     -- colors of tetrominos (n is blank)
     local colors = {
@@ -256,10 +286,18 @@ function love.draw()
         l = {1, 0.62, 0}
     }
 
+
+        
+    -- recenter graphics for things in the playing field
+    love.graphics.push()
+    love.graphics.translate(woffset, 0)
+    love.graphics.push()
+    love.graphics.translate(0 , -math.floor((FIELDHEIGHT - FIELDHEIGHTVISIBLE)*blocksize) - blocksize)
+
     -- draws a white background for the playing field
     love.graphics.setColor(1,1,1)
     love.graphics.rectangle("fill", blocksize, blocksize, FIELDWIDTH * blocksize, FIELDHEIGHT * blocksize)
-    
+
     -- draws the ghosts
     --   they are rendered under the field
     --   since the blank field is slightly transparent, the ghost shows through
@@ -289,7 +327,7 @@ function love.draw()
         -- center to 1 block before the top left corner of the playing field
         --   the 1 block is to account for a barrier
         love.graphics.push()
-        love.graphics.translate(0 , blocksize)
+        love.graphics.translate(0 , 2 * blocksize)
 
         local width = #Held[1]
         local offset = -width
@@ -351,8 +389,7 @@ function love.draw()
     end
 
     
-    -- start and stop overlays
-
+    -- Screen overlay effects
     love.graphics.pop()
 
     if GameStarting then
@@ -360,7 +397,7 @@ function love.draw()
         --   (a rectangle overlay that disappears a bit each second)
         offset = math.floor(width * Begin_overlay / 3)
 
-        love.graphics.setColor(0, 0, 100, 0.5)
+        love.graphics.setColor(0, 0, 100, 0.4)
         love.graphics.rectangle("fill", offset, 0, width, height)
         return
     end

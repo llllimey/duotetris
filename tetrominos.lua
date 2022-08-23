@@ -185,11 +185,10 @@ function Tetromino:new(maps)
     -- if there's no space, it can spawn one block higher
     -- TODO: if there's no space, kick player to the side and/or up so long as the block
     --        doesn't go beyond the spawning zone
-    -- TODO: only game over if both players are obstructed from spawning
     if self:collides_at(self.row, self.col, self.rotation) then
         if self:collides_at(self.row + 1, self.col, self.rotation) then
             self.obstructed = true
-            print("Obstructed")
+            -- print("Obstructed")
             -- print(self.col, self.row)
         else
             self.row = self.row + 1
@@ -464,7 +463,7 @@ function Tetromino:spin(direction)
     if self:collides_at(self.row - 1, self.col, self.rotation) then
         self.falldistance = 0
         self.landed = true
-        print("landed via spin")
+        -- print("landed via spin")
     end
 
     -- doesn't collide, so move :))
