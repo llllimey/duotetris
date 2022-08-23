@@ -75,6 +75,8 @@ end
 function CanSpawn(map)
     local check = Tetromino(map)
     if check.obstructed then
+        -- TODO: if other player is obstructed, then game over
+        GameOver = true
         return false
     end
     return true

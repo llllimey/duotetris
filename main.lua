@@ -14,65 +14,68 @@ function love.load()
     FIELDHEIGHT = 40
     FIELDHEIGHTVISIBLE = 20.25
     FIELDWIDTH = 10
-    function Start()
-        Field = {}
-        -- initialize field to blank area with walls on sides and bottom
-        for i=1, FIELDHEIGHT do
-            table.insert(Field, {})
-            for j=1, FIELDWIDTH do
-                Field[i][j] = " "
-            end
+
+    Field = {}
+    -- initialize field to blank area with walls on sides and bottom
+    for i=1, FIELDHEIGHT do
+        table.insert(Field, {})
+        for j=1, FIELDWIDTH do
+            Field[i][j] = " "
         end
-
-        -- -- print field for debugging
-        -- for i = 1, #Field do
-        --     for j,block in pairs(Field[i]) do
-        --         io.write(block.." ")
-        --     end
-        --     print("|"..i)
-        -- end
-
-        -- upcoming tetrominos
-        Queue = {}
-        Queue.pieces = {}
-        -- appends queue with a 7 tetrominos in a random order
-        function Queue:add_bag()
-            local bag = {"i", "o", "t", "s", "z", "j", "l"}
-            for i = #bag, 1, -1 do
-                local random = love.math.random(i)
-                table.insert(self.pieces, bag[random])
-                table.remove(bag, random)
-            end
-        end
-        -- gives the upcoming tetromino
-        function Queue:next()
-            local p = self.pieces[1]
-            table.remove(self.pieces, 1)
-            -- also adds another bag to queue if need be
-            if #self.pieces < 7 then
-                self:add_bag()
-            end
-            return p
-        end
-        Queue:add_bag()
-
-        EVADE_MULTIPLIER = 0.8
-        KICK_EVADE_MULTIPLIER = 0.9
-        ENHANCEDSPEED = 20
-        Locktime = 0.5
-
-        Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
-        LINEPOINTMULT = 130 -- how many extra points per extra line cleared
-        SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
-        Falltime = 1
     end
-    Start()
+
+    -- -- print field for debugging
+    -- for i = 1, #Field do
+    --     for j,block in pairs(Field[i]) do
+    --         io.write(block.." ")
+    --     end
+    --     print("|"..i)
+    -- end
+
+    -- upcoming tetrominos
+    Queue = {}
+    Queue.pieces = {}
+    -- appends queue with a 7 tetrominos in a random order
+    function Queue:add_bag()
+        local bag = {"i", "o", "t", "s", "z", "j", "l"}
+        for i = #bag, 1, -1 do
+            local random = love.math.random(i)
+            table.insert(self.pieces, bag[random])
+            table.remove(bag, random)
+        end
+    end
+    -- gives the upcoming tetromino
+    function Queue:next()
+        local p = self.pieces[1]
+        table.remove(self.pieces, 1)
+        -- also adds another bag to queue if need be
+        if #self.pieces < 7 then
+            self:add_bag()
+        end
+        return p
+    end
+    Queue:add_bag()
+
+    EVADE_MULTIPLIER = 0.8
+    KICK_EVADE_MULTIPLIER = 0.9
+    ENHANCEDSPEED = 20
+    Locktime = 0.5
+
+    Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
+    LINEPOINTMULT = 130 -- how many extra points per extra line cleared
+    SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
+    Falltime = 1
+
 
     Event = {}  -- keeps track of events that need graphics
     Event[1] = {color = {1, 0, 1, 0.08}, mult = 1} -- spin
     Event[2] = {color = {0, 1, 1, 0.1}} -- tetris
 
     P1 = Player()
+    P1.obstructed = false
+    GameOver = false
+    GameStarting = false
+    GameStarted = false
     -- for i,v in pairs(Queue.pieces) do
     --     io.write(v)
     -- end
@@ -88,8 +91,7 @@ function love.keypressed(key)
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
-            Start()
-            GameOver = false
+            love.load()
         end
         return
     end
@@ -241,7 +243,6 @@ function love.update(dt)
         -- if P2 and not P2.obstructed then
         --     return
         -- end
-        GameOver = true
     end
 end
 
