@@ -227,86 +227,57 @@ function Tetromino:new(maps, player)
     self.spawned = true
 end
 
-
--- removes tetromino from both fields
---  use together with mark() to ensure tetromino doesn't leave a ghost behind
-function Tetromino:erase()
-    for i,row in ipairs(self.map[self.rotation]) do
-        for j,block in ipairs(row) do
-            -- set field block to empty wherever a tetromino is
-            if block ~= " " then
-                Field[self.row + i - 1][self.col + j - 1] = " "
-                Playerfield[self.row + i - 1][self.col + j - 1] = " "
-            end
-        end
-    end
-end
-
--- marks tetromino on both fields
---   does not check for collision
-function Tetromino:mark()
-    for i,row in ipairs(self.map[self.rotation]) do
-        for j,block in ipairs(row) do
-            -- set field block to tetromino wherever tetromino is
-            if block ~= " " then
-                Field[self.row + i - 1][self.col + j - 1] = block
-                Playerfield[self.row + i - 1][self.col + j - 1] = self.p
-                -- io.write("Set!")
-            end
-        end
-    end
-end
-
--- only erases tetro from the player field
---   used when piece locks
-function Tetromino:playererase()
-    for i,row in ipairs(self.map[self.rotation]) do
-        for j,block in ipairs(row) do
-            -- set field block to empty wherever a tetromino is
-            if block ~= " " then
-                Playerfield[self.row + i - 1][self.col + j - 1] = " "
-            end
-        end
-    end
-end
-
--- checks if the tetromino will collide at a certain location/rotation
---  returns true if it will collide, false if it won't collide
-function Tetromino:collides_at(c_row, c_col, c_rotation)
-    for i,row in ipairs(self.map[c_rotation]) do
-        for j,block in ipairs(row) do
-            if block ~= " "  then
-                local y = c_row + i - 1
-                local x = c_col + j - 1
-                if not Field[y] or Field[y][x] ~= " " then
-                    -- if the tile the tetrimino is on isn't empty
-                    --  then there is collision :(((
-                    -- print("col "..x.. " row "..y)
-                    return true
-                end
-            end
-        end
-    end
-    return false
-    -- WhereMapOccupies(self.map[c_rotation], c_row, c_col, function ()
-    --     if not Field[y] or Field[y][x] ~= " " then
-    --         return true
-    -- end)
-end
-
-
--- does a function(x, y) at spots occupied by the map, (x, y) being the coordinates of a tile
-function WhereMapOccupiesDo(map, row, col, f)
+-- does a function(x, y, block) at spots occupied by the map, 
+-- (x, y) being the coordinates of a tile, block being what is at that tile.
+-- can return true if f() returns true, returns nothing otherwise.
+-- useful so i don't have to rewrite the loop for iterating through the block
+function WhereMapOccupiesDo(map, col, row, f)
     for i,r in pairs(map) do
         for j,block in pairs(r) do
             if block ~= " " then
                 local y = row + i - 1
                 local x = col + j - 1
-                if f(x, y) then return true
+                if f(x, y, block) then return true
                 end
             end
         end
     end
+end
+
+-- removes tetromino from both fields
+--  use together with mark() to ensure tetromino doesn't leave a ghost behind
+function Tetromino:erase()
+    WhereMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+        Field[y][x] = " "
+        Playerfield[x][y] = " "
+    end)
+end
+
+-- marks tetromino on both fields
+--   does not check for collision
+function Tetromino:mark()
+    WhereMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
+        Field[y][x] = block
+        Playerfield[y][x] = self.p
+    end)
+end
+
+-- only erases tetro from the player field
+--   used when piece locks
+function Tetromino:playererase()
+    WhereMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+        Playerfield[y][x] = " "
+    end)
+end
+
+-- checks if the tetromino will collide at a certain location/rotation
+--  returns true if it will collide, false if it won't collide
+function Tetromino:collides_at(c_row, c_col, c_rotation)
+    if WhereMapOccupiesDo(self.map[c_rotation], c_col, c_row, function (x, y)
+        if not Field[y] or Field[y][x] ~= " " then
+            return true
+        end
+    end) then return true else return false end
 end
 
 

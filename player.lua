@@ -208,8 +208,8 @@ function TryRowClear()
 end
 
 
--- make a ghost for a player (shows where their piece falls)
---  ghost will be updated when piece spawns or moves
+-- make a player.ghost for a player (shows where their piece falls)
+--  ghost should be updated when piece spawns or moves
 function Player:make_ghost()
     -- if there isn't a piece, then you can't make a ghost for it, dumbass
     if not self.piece then return end
@@ -221,24 +221,13 @@ function Player:make_ghost()
     ghost.map = self.piece.map[self.piece.rotation]
     ghost.y = self.piece.row
     ghost.x = self.piece.col
-    local function collides_at(c_row, c_col, map)
-        for i,row in ipairs(map) do
-            for j,block in ipairs(row) do
-                if block ~= " "  then
-                    local y = c_row + i - 1
-                    local x = c_col + j - 1
-                    if not Field[y] or Field[y][x] ~= " " then
-                        -- if the tile the tetrimino is on isn't empty
-                        --  then there is collision :(((
-                        return true
-                    end
-                end
-            end
-        end
-        return false
-    end
 
-    while not collides_at(ghost.y + 1, ghost.x, ghost.map) do
+    -- move ghost downwards until it can't anymore (would collide if it moved further down)
+    while not WhereMapOccupiesDo(ghost.map, ghost.x, ghost.y + 1, function(x, y)
+        if not Field[y] or Field[y][x] ~= " " then
+            return true
+        end
+    end) do
         ghost.y = ghost.y + 1
     end
 
@@ -253,19 +242,9 @@ end
 -- renders a ghost
 function Player:render_ghost(colors, blocksize)
     if self.piece and self.ghost then
-        for i,row in pairs(self.ghost.map) do
-            for j, block in pairs(row) do
-                if block ~= " " then
-                    love.graphics.setColor(colors[block])
-                    local x = (self.ghost.x + j - 1) * blocksize
-                    local y = (self.ghost.y + i - 1) * blocksize
-                    love.graphics.rectangle("fill", x, y, blocksize, blocksize)
-                    
-                    -- if Field[self.ghost.y + i - 1][self.ghost.x + j - 1] ~= " " then
-                    --     print(self.ghost.x, self.ghost.y)
-                    -- end
-                end
-            end
-        end
+        WhereMapOccupiesDo(self.ghost.map, self.ghost.x, self.ghost.y, function(x, y, block)
+            love.graphics.setColor(colors[block])
+            love.graphics.rectangle("fill", x * blocksize, y * blocksize, blocksize, blocksize)
+        end)
     end
 end
