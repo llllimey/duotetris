@@ -59,10 +59,10 @@ function love.load()
         EVADE_MULTIPLIER = 0.8
         KICK_EVADE_MULTIPLIER = 0.9
         ENHANCEDSPEED = 3
-        LOCKTIME = 0.5
-        Falltime = 0.3
-        
-        -- Score = 0
+        Locktime = 0.5
+
+        Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
+        Falltime = 1
     end
     Start()
 
@@ -143,7 +143,7 @@ function love.keypressed(key)
             P1.piece.time_next_fall = 0
         elseif key == "up" then
             while P1.piece:fall() do end
-            P1.piece.time_still = LOCKTIME + 1
+            P1.piece.time_still = Locktime + 1
         end
 
         P1:make_ghost()
@@ -206,7 +206,7 @@ function love.update(dt)
     tick.update(dt)
 
     -- update event effects
-    for i,v in pairs(Event) do
+    for i,v in ipairs(Event) do
         if v.yes then
             if not v.time then
                 v.time = 0
