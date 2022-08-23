@@ -66,14 +66,13 @@ function love.load()
         end
         return p
     end
-    Queue:add_bag()
 
     EVADE_MULTIPLIER = 0.8
     KICK_EVADE_MULTIPLIER = 0.9
     ENHANCEDSPEED = 20
     Locktime = 0.5
 
-    Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
+    Score = nil -- score doesn't exist until game starts
     LINEPOINTMULT = 130 -- how many extra points per extra line cleared
     SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
     Falltime = 1
@@ -112,12 +111,6 @@ function love.keypressed(key)
     end
     -- start the game by pressing space
     if not GameStarting and not GameStarted and key == "space" then
-        P1.piece = Tetromino(Maps[Queue:next()], 1)
-        P2.piece = Tetromino(Maps[Queue:next()], 2)
-        P1:make_ghost()
-        P2:make_ghost()
-        P1.piece:mark()
-        P2.piece:mark()
         Begin_count = 0
         Begin_overlay = 0
         GameStarting = true
@@ -222,12 +215,26 @@ function love.focus(f) Focus = f end
 function love.update(dt)
     -- starting sequence
     if GameStarting then
+        -- counts to 3 seconds
         Begin_count = Begin_count + dt
         if Begin_count > 1 then
             Begin_count = 0
             Begin_overlay = Begin_overlay + 1
         end
+        -- begins game after 3 secondss
         if Begin_overlay == 3 then
+            -- add pieces to queue
+            Queue:add_bag()
+            -- spawn in players
+            P1.piece = Tetromino(Maps[Queue:next()], 1)
+            P2.piece = Tetromino(Maps[Queue:next()], 2)
+            P1:make_ghost()
+            P2:make_ghost()
+            P1.piece:mark()
+            P2.piece:mark()
+            
+            Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
+
             GameStarting = false
             GameStarted = true
         end
@@ -358,6 +365,15 @@ function love.draw()
 
     love.graphics.pop()
 
+    -- draw the score
+    love.graphics.setColor(1,1,1)
+    love.graphics.print("Level", -90, height -85)
+    love.graphics.print("Score", -90, height -45)
+    if Score then
+        love.graphics.print(tostring(Score.level), -80, height -68)
+        love.graphics.print(tostring(Score.points), -80, height -28)
+    end
+
     -- don't draw anything past this if game isn't started yet
     if not GameStarted and not GameStarting then
         love.graphics.pop()
@@ -365,11 +381,6 @@ function love.draw()
     end
 
     local miniblocksize = math.ceil(blocksize * miniblockscale)
-
-    -- draw the score
-    love.graphics.setColor(1,1,1)
-    love.graphics.print("Level "..Score.level, -90, height-50)
-    love.graphics.print("Score: "..Score.points, -90, height -30)
 
     --draw the held tetromino
     if Held then
