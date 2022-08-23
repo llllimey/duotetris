@@ -34,7 +34,7 @@ function love.load()
 
         -- upcoming tetrominos
         Queue = {}
-        Queue.pieces = {"i"}
+        Queue.pieces = {}
         -- appends queue with a 7 tetrominos in a random order
         function Queue:add_bag()
             local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -58,16 +58,18 @@ function love.load()
 
         EVADE_MULTIPLIER = 0.8
         KICK_EVADE_MULTIPLIER = 0.9
-        ENHANCEDSPEED = 3
+        ENHANCEDSPEED = 20
         Locktime = 0.5
 
         Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
+        LINEPOINTMULT = 130 -- how many extra points per extra line cleared
+        SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
         Falltime = 1
     end
     Start()
 
     Event = {}  -- keeps track of events that need graphics
-    Event[1] = {color = {1, 0, 1, 0.08}} -- spin
+    Event[1] = {color = {1, 0, 1, 0.08}, mult = 1} -- spin
     Event[2] = {color = {0, 1, 1, 0.1}} -- tetris
 
     P1 = Player()
@@ -221,7 +223,7 @@ function love.update(dt)
         end
     end
 
-    -- update existing piece to fall or lock
+    -- update existing pieces
     if P1.piece then
         if love.keyboard.isDown("down") then
             P1.piece.speed = ENHANCEDSPEED

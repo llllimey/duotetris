@@ -25,7 +25,7 @@ function Player:update(dt)
             and self.piece:collides_at(row, col - 1, rot) -- couldn't arrive by moving right
             then
             Event[1].yes = true
-            Event[1].mult = 3
+            Event[1].mult = SPINPOINTMULT
             print("spin")
         end
         self.piece:mark()
@@ -117,23 +117,26 @@ function TryRowClear(otherp)
 
     -- check for full clear
     local fullclear_mult = 8
-    for i,v in Field do
-        for j,block in v do
+    for i,v in pairs(Field) do
+        for j,block in pairs(v) do
             if block ~= " " then
                 fullclear_mult = 1
             end
         end
     end
     -- effect for full clear (it's the same effect as tetris)
-    if fullclear_mult == 8 then Event[2].yes = true end
+    if fullclear_mult == 8 then
+        Event[2].yes = true
+        print("full clear")
+    end
 
     -- calculate points for lines (no multipliers yet), more lines more points/line
-    local lines_points = 100  
+    local lines_points = 100 
     for i=1, linescleared-1 do
-        lines_points = lines_points + 1.5*i
+        lines_points = lines_points + LINEPOINTMULT* i
     end
     -- calculate total points (includes multipliers)
-    Score.points = Score.points + (lines_points * Score.level * Event[1].mult * fullclear_mult)
+    Score.points = Score.points + (lines_points * (Score.level + 1) * Event[1].mult * fullclear_mult)
 
     -- resets multiplier for spins
     Event[1].mult = 1
@@ -143,8 +146,11 @@ function TryRowClear(otherp)
 
     -- keep track of level and falltime
     while linescleared > 0 do
+        print(Score.tonextlevel, linescleared)
         Score.tonextlevel = Score.tonextlevel - linescleared
+        print(Score.tonextlevel)
         if Score.tonextlevel <= 0 then
+            print(Score.tonextlevel)
             linescleared = -Score.tonextlevel
             Score.level = Score.level + 1
             Score.tonextlevel = (Score.level + 1) * 10
@@ -153,11 +159,12 @@ function TryRowClear(otherp)
             elseif Score.level < 30 then
                 Locktime = Locktime * 0.9
             end
+        else
+            linescleared = 0
         end
     end
 
-
-    print(Score.points)
+    print(Score.points, Score.lines, Score.level)
 
     if otherp then
         otherp.piece:mark()
