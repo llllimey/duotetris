@@ -28,6 +28,7 @@ function Player:update(dt)
 
         -- from henceforth, the piece is locked
 
+
         -- check if piece landed by spinning
         if      self.piece:collides_at(row - 1, col, rot) -- couldn't arrive by falling
             and self.piece:collides_at(row, col + 1, rot) -- couldn't arrive by moving left
@@ -42,8 +43,6 @@ function Player:update(dt)
         -- if piece locks, then player is able to use hold pieces again
         self.usedhold = false
 
-        self.piece = nil   -- player has no piece
-
         -- if it locks on to a player, then add the map to that player
         if self:onplayer() then
             self:givemap()
@@ -53,6 +52,8 @@ function Player:update(dt)
             TryRowClear()
         end
             
+        self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
+        self.piece = nil   -- player has no piece
         self:TryNewPiece() -- try to give player a new piece
     else
         self.piece.time_still = self.piece.time_still + dt
@@ -91,7 +92,6 @@ function Player:TryNewPiece()
 
     -- new piece spawns 
     Player.obstructed = false
-    self.piece:playererase()
     self.piece = Tetromino(Maps[Queue:next()], self.n)
     self.piece:mark()
     -- don't forget to make a ghost
@@ -203,6 +203,9 @@ end
 -- make a ghost for a player (shows where their piece falls)
 --  ghost will be updated when piece spawns or moves
 function Player:make_ghost()
+    -- if there isn't a piece, then you can't make a ghost for it, dumbass
+    if not self.piece then return end
+
     -- erase piece so it doesn't interfere with ghost
     self.piece:erase()
 
@@ -250,9 +253,9 @@ function Player:render_ghost(colors, blocksize)
                     local y = (self.ghost.y + i - 1) * blocksize
                     love.graphics.rectangle("fill", x, y, blocksize, blocksize)
                     
-                    if Field[self.ghost.y + i - 1][self.ghost.x + j - 1] ~= " " then
-                        -- print(self.ghost.x, self.ghost.y)
-                    end
+                    -- if Field[self.ghost.y + i - 1][self.ghost.x + j - 1] ~= " " then
+                    --     print(self.ghost.x, self.ghost.y)
+                    -- end
                 end
             end
         end

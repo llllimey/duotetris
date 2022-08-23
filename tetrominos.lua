@@ -147,6 +147,8 @@ function Tetromino:new(maps, player)
     self:findkickmaps()
     self.p = player -- which player the tetromino belongs to
 
+    self.marked = false
+
     self.rotation = 1
 
     self.speed = 1
@@ -161,10 +163,13 @@ function Tetromino:new(maps, player)
     local width = #self.map[1]
     local offset
     local col
+    local pdirection
     if player == 1 then
+        pdirection = -1
         offset = FIELDWIDTH * 1.5 - width
         col = math.ceil(offset * 0.5) + 1
     elseif player == 2 then
+        pdirection = 1
         offset = FIELDWIDTH * 0.5 - width
         col = math.floor(offset * 0.5) + 1
     else
@@ -193,13 +198,33 @@ function Tetromino:new(maps, player)
 
 
     -- if the normal spawn location is unavailable, kick to the nearest spot
-    if not self:spin("kick "..player) then
-        -- if a kick doesn't work, try a rotation kick
-        if not self:spin("countercw") then
-            -- if rotation doesn't work, then the piece is truly obstructed
-            self.obstructed = true
-        end
+    -- if the normal range of kicks doesn't work, try moving to the left/right and try again
+    self.spawned = false
+
+    local to_edge = col
+    if player == 2 then
+        to_edge = FIELDWIDTH - (col + (width))
     end
+    for i = 1, to_edge do
+        if self:spin("kick "..player) then
+            self.obstructed = false
+            return
+        end
+        self.obstructed = true
+        self.col = self.col + pdirection
+    end
+    self.col = col
+    for i = 1, to_edge do
+        if self:spin("countercw") then
+            print("ccw")
+            self.obstructed = false
+            return
+        end
+        self.obstructed = true
+        self.col = self.col + pdirection
+    end
+
+    self.spawned = true
 end
 
 
@@ -225,7 +250,7 @@ function Tetromino:mark()
             -- set field block to tetromino wherever tetromino is
             if block ~= " " then
                 Field[self.row + i - 1][self.col + j - 1] = block
-                Field[self.row + i - 1][self.col + j - 1] = self.p
+                Playerfield[self.row + i - 1][self.col + j - 1] = self.p
                 -- io.write("Set!")
             end
         end
@@ -463,7 +488,7 @@ function Tetromino:spin(direction)
         end
     end
 
-    if rot_mult ~= 0 then self:erase() end
+    if self.spawned then self:erase() end
     -- check to see if it would collide after moving to new orientation
     -- if it collides, try kicking the piece
     -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
@@ -484,8 +509,8 @@ function Tetromino:spin(direction)
             self.rotation = c_rotation
 
 
-            -- for spinless kicks, return true for it is able to be kicked
-            if rot_mult == 0 then
+            -- if here from trying to spawn, return true for it is able to be kicked
+            if not self.spawned then
                 return true
             end
             -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
@@ -493,8 +518,8 @@ function Tetromino:spin(direction)
         end
     end
 
-    -- for spinless kicks, return false for it is not able to be kicked
-    if rot_mult == 0 then
+    -- if here from trying to spawn, return false for it is not able to be kicked
+    if not self.spawned then
         return false
     end
 

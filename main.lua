@@ -16,27 +16,27 @@ function love.load()
     FIELDWIDTH = 10
 
 
-    -- a field is a blank table of field dimensions (blank is " ")
-    local FieldClass = Object:extend()
-    function FieldClass:new()
-        self = {}
-        for i=1, FIELDHEIGHT do
-            table.insert(self, {})
-            for j=1, FIELDWIDTH do
-                self[i][j] = " "
-            end
+    -- Field stores everything on the field in the form of letter tiles or
+    Field = {}
+    for i=1, FIELDHEIGHT do
+        table.insert(Field, {})
+        for j=1, FIELDWIDTH do
+            Field[i][j] = " "
+        end
+    end
+
+    -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
+    Playerfield = {}
+    for i=1, FIELDHEIGHT do
+        table.insert(Playerfield, {})
+        for j=1, FIELDWIDTH do
+            Playerfield[i][j] = " "
         end
     end
 
 
-    -- Field stores everything on the field in the form of letter tiles or
-    Field = FieldClass()
-
-    -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
-    Playerfield = FieldClass()
-
-
-    -- -- print field for debugging
+    -- print field for debugging
+    -- print("debugging")
     -- for i = 1, #Field do
     --     for j,block in pairs(Field[i]) do
     --         io.write(block.." ")
@@ -137,35 +137,35 @@ function love.keypressed(key)
             elseif key == "." then
                 P1.piece:spin("cw")
             end
-        end
-        -- P1 hold
-        if key == "rshift" and not P1.usedhold then
-            if not Held then
-                P1.piece:erase()
-                -- only switch pieces if piece can spawn
-                if not CanSpawn(Maps[Queue.pieces[1]], 1) then
-                    return
+            -- P1 hold
+            if key == "rshift" and not P1.usedhold then
+                if not Held then
+                    P1.piece:erase()
+                    -- only switch pieces if piece can spawn
+                    if not CanSpawn(Maps[Queue.pieces[1]], 1) then
+                        return
+                    end
+                    Held = P1.piece.map
+                    P1.piece = Tetromino(Maps[Queue:next()], 1)
+                    P1.piece:mark()
+                else
+                    -- only switch pieces if piece can spawn
+                    P1.piece:erase()
+                    if not CanSpawn(Held, 1) then
+                        return
+                    end
+                    local temp = Held
+                    Held = P1.piece.map
+                    P1.piece = Tetromino(temp, 1)
+                    P1.piece:mark()
                 end
-                Held = P1.piece.map
-                P1.piece = Tetromino(Maps[Queue:next()], 1)
-                P1.piece:mark()
-            else
-                -- only switch pieces if piece can spawn
-                P1.piece:erase()
-                if not CanSpawn(Held, 1) then
-                    return
-                end
-                local temp = Held
-                Held = P1.piece.map
-                P1.piece = Tetromino(temp, 1)
-                P1.piece:mark()
+                P1.usedhold = true
+            elseif key == "down" then
+                P1.piece.time_next_fall = 0
+            elseif key == "up" then
+                while P1.piece:fall() do end
+                P1.piece.time_still = Locktime + 1
             end
-            P1.usedhold = true
-        elseif key == "down" then
-            P1.piece.time_next_fall = 0
-        elseif key == "up" then
-            while P1.piece:fall() do end
-            P1.piece.time_still = Locktime + 1
         end
 
         P1:make_ghost()
@@ -348,6 +348,9 @@ function love.draw()
     -- draws the playing field
     for i,row in ipairs(Field) do
         for j,block in pairs(row) do
+            if not colors[block] then
+                print(block)
+            end
             love.graphics.setColor(colors[block])
             love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
         end
