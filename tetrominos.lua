@@ -343,7 +343,7 @@ function Tetromino:move(direction)
     -- but the more times they try to move to evade being locked, the less effective it is
     -- the effectiveness is reset to normal if the piece falls
     if self.landed then
-        self.time_still = self.time_still - self.time_still * self.evade_strength
+        self.time_still = self.time_still * (1 - self.evade_strength)
         self.evade_strength = self.evade_strength * EVADE_MULTIPLIER
     end
     return true
@@ -519,7 +519,7 @@ function Tetromino:spin(direction)
     -- but the more times they try to move to evade being locked, the less effective it is
     -- the effectiveness is reset to normal if the piece falls
     if self.landed then
-        self.time_still = self.time_still - self.time_still * self.evade_strength
+        self.time_still = self.time_still * (1 - self.evade_strength)
         self.evade_strength = self.evade_strength * KICK_EVADE_MULTIPLIER
     end
     return true
