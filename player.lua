@@ -233,8 +233,11 @@ function Player:remap()
     self.piece.width = width
     self.piece.row = yleast - pad_top
     self.piece.col = xleast
+
     self.piece.rotation = rotation
     self.piece.map = complete_maps
+
+    self.maxkick = math.ceil(width * 0.5)
     self.piece:findkickmaps()
     self:make_ghost()
     self.piece.time_next_fall = Falltime

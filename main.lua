@@ -64,7 +64,7 @@ function love.load()
     Score = nil -- score doesn't exist until game starts
     LINEPOINTMULT = 130 -- how many extra points per extra line cleared
     SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
-    Falltime = 5
+    Falltime = 1
 
 
     Event = {}  -- keeps track of events that need graphics
