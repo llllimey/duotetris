@@ -3,6 +3,9 @@ io.stdout:setvbuf("no")
 
 
 function love.load()
+    love.window.setMode(504, 486)
+    love.window.setTitle("duotetris")
+
     Object = require "classic"
     tick = require "tick"
     
