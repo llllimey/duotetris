@@ -129,6 +129,7 @@ end
 
 -- rechecks the playerfield for tiles belonging to the player, then updates map for tiles
 function Player:remap()
+    Debug:printfields("beginning remap")
     -- find outer bounds for the new shape
     local xmost = 0
     local xleast = FIELDWIDTH
@@ -182,8 +183,10 @@ function Player:remap()
     end
 
     -- ensure map is horizontal
+    local rotation = 5
     if height > width then
         map = rotate(map)
+        rotation = rotation - 1
 
         local temp = width
         width = height
@@ -211,6 +214,7 @@ function Player:remap()
     local upsidedown = false
     if wtop < wbottom then
         upsidedown = true
+        rotation = rotation - 2
     end
 
     -- add padding to map to make it square
@@ -234,20 +238,18 @@ function Player:remap()
 
     -- rotation time (create a list of all map rotations)
     local complete_maps = {}
-    local rotation
-    if not upsidedown then
-        rotation = 1
-        complete_maps[1] = map
-        complete_maps[2] = rotate(complete_maps[1])
-        complete_maps[3] = rotate(complete_maps[2])
-        complete_maps[4] = rotate(complete_maps[3])
-    else
-        rotation = 3
-        complete_maps[3] = map
-        complete_maps[4] = rotate(complete_maps[3])
-        complete_maps[1] = rotate(complete_maps[4])
-        complete_maps[2] = rotate(complete_maps[1])
+
+    for i = 1, 4 do
+        if rotation == 5 then rotation = 1 end -- loops back to 1 if goes past 4
+        local n = rotation + 1     -- next map
+        if n == 5 then n = 1 end   -- also loop back if it goes past 4
+        complete_maps[n] = rotate(complete_maps[rotation])
+        rotation = rotation + 1
     end
+    rotation = rotation + 1
+        
+    Debug:printmaps(complete_maps)
+    print("rotation before remap: "..self.piece.rotation)
 
     -- update player with new data
     self.piece.width = width
@@ -256,10 +258,12 @@ function Player:remap()
 
     self.piece.rotation = rotation
     self.piece.map = complete_maps
+    print("after remap: "..self.piece.rotation)
 
     self.maxkick = math.ceil(width * 0.5)
     self.piece:findkickmaps()
     self:make_ghost()
+    Debug:printfields()
 end
 
 function Player:TryNewPiece()

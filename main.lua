@@ -465,7 +465,7 @@ Debug = {}
 -- prints out the Field and Playerfield
 function Debug:printfields(message)
     if message then print(message) end
-    for i = 1, #Field do
+    for i = 15, #Field do
         for j,block in pairs(Playerfield[i]) do
             if block ~= " " then
                 io.write(block.." ")
@@ -473,8 +473,8 @@ function Debug:printfields(message)
                 io.write("• ")
             end
         end
-        if i < 10 then i = i.." " end
         io.write("|"..i.. "          ")
+        if i < 10 then io.write(" ") end
         for j,block in pairs(Field[i]) do
             if block ~= " " then
                 io.write(block.." ")
@@ -490,7 +490,7 @@ end
 function Debug:printmaps(maps, message)
     if message then print(message) end
     for i,m in pairs(maps) do
-        print("____________")
+        print(i.."_________")
         for j,r in pairs(m) do
             print()
             for k,b in pairs(r) do
