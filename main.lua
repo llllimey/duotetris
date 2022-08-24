@@ -33,16 +33,6 @@ function love.load()
         end
     end
 
-
-    -- print field for debugging
-    -- print("debugging")
-    -- for i = 1, #Field do
-    --     for j,block in pairs(Field[i]) do
-    --         io.write(block.." ")
-    --     end
-    --     print("|"..i)
-    -- end
-
     -- upcoming tetrominos
     Queue = {}
     Queue.pieces = {}
@@ -88,19 +78,9 @@ function love.load()
     GameOver = false
     GameStarting = false
     GameStarted = false
-
-    -- for i,v in pairs(Queue.pieces) do
-    --     io.write(v)
-    -- end
 end
 
 function love.keypressed(key)
-    -- if key == "s" then
-    --     Event[1].yes = true
-    -- end
-    -- if key == "t" then
-    --     Event[2].yes = true
-    -- end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -470,7 +450,10 @@ function love.quit()
     print("the game is done.")
 end
 
+
+-- some useful print commands for debugging
 Debug = {}
+-- prints out the Field and Playerfield
 function Debug:printfields(message)
     if message then print(message) end
     for i = 1, #Field do
@@ -490,5 +473,20 @@ function Debug:printfields(message)
             end
         end
         print("|"..i)
+    end
+end
+-- prints all maps from a list of maps
+function Debug:printmaps(maps, message)
+    if message then print(message) end
+    for i,m in pairs(maps) do
+        print("____________")
+        for j,r in pairs(m) do
+            print()
+            for k,b in pairs(r) do
+                if b == " " then b = "•" end
+                io.write(b.." ")
+            end
+        end
+        print()
     end
 end

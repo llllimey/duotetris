@@ -102,6 +102,7 @@ function Player:givemap()
         Playerfield[y][x] = otherp
     end)
 
+    -- makes other player remap to incorperate the new blocks
     if self.n == 1 then P2:remap() end
     if self.n == 2 then P1:remap() end
 end
@@ -109,7 +110,7 @@ end
 -- rechecks the playerfield for tiles belonging to the player, then updates map for tiles
 function Player:remap()
     -- find outer bounds for the new shape
-    local xmost = 1
+    local xmost = 0
     local xleast = FIELDWIDTH
     local ymost = 1
     local yleast = FIELDHEIGHT
@@ -119,10 +120,18 @@ function Player:remap()
             if x < xleast then xleast = x end
             if y > ymost then ymost = y end
             if y < yleast then yleast = y end
-            end
+        end
     end)
+
+    -- if no bounds are found, then there must be no tiles for the player
+    -- so, player needs to try getting a new piece
+    if xmost == 0 then
+        Player:TryNewPiece()
+    end
+
     local width = xmost - xleast + 1
     local height = ymost - yleast + 1
+
     -- make a map for player stuff within the bounds
     local map = {}
     local index = 0
@@ -141,11 +150,11 @@ function Player:remap()
     -- rotates table 'a' clockwise
     local function rotate(a)
         local b = {}
-        local ilen = #a[1] -- 4
-        local jlen = #a    -- 3
-        for i = 1, ilen do  -- repeats 4 times
+        local ilen = #a[1]
+        local jlen = #a
+        for i = 1, ilen do
             table.insert(b, {})
-            for j = 1, jlen do   -- repeats 3 times
+            for j = 1, jlen do
                 b[i][j] = a[jlen - j + 1][i]
             end
         end
@@ -166,11 +175,13 @@ function Player:remap()
     local wtop = 0     --weight of top half
     local wbottom = 0  --weight of bottom half
     for i = 1, to_mid do
+        -- counts blocks in top half, starting from top
         for j,v in pairs(map[i]) do
             if v ~= " " then
                 wtop = wtop + 1
             end
         end
+        -- counts blocks in bottom half, starting from bottom
         for j,v in pairs(map[height - (i -1)]) do
             if v ~= " " then
                 wbottom = wbottom + 1
@@ -201,7 +212,7 @@ function Player:remap()
     for i=1, pad_bottom do table.insert(map, padding) end
     for i=1, pad_top do table.insert(map, 1, padding) end
 
-    -- rotation time
+    -- rotation time (create a list of all map rotations)
     local complete_maps = {}
     local rotation
     if not upsidedown then
@@ -217,18 +228,6 @@ function Player:remap()
         complete_maps[1] = rotate(complete_maps[4])
         complete_maps[2] = rotate(complete_maps[1])
     end
-
-    -- for i,m in pairs(complete_maps) do
-    --     print("____________")
-    --     for j,r in pairs(m) do
-    --         print()
-    --         for k,b in pairs(r) do
-    --             if b == " " then b = "•" end
-    --             io.write(b.." ")
-    --         end
-    --     end
-    --     print()
-    -- end
 
     -- update player with new data
     self.piece.width = width
@@ -311,7 +310,6 @@ function TryRowClear()
     if deletedplayer == 1 then P2:remap()
     elseif deletedplayer == 2 then P1:remap() end
 
-
     -- if 4+ lines are cleared, then do a fun tetris effect
     if linescleared > 3 then
         Event[2].yes = true
@@ -349,14 +347,14 @@ function TryRowClear()
 
     -- keep track of level and falltime
     while linescleared > 0 do
-        -- print(Score.tonextlevel, linescleared)
         Score.tonextlevel = Score.tonextlevel - linescleared
-        -- print(Score.tonextlevel)
+        
         if Score.tonextlevel <= 0 then
-            -- print(Score.tonextlevel)
             linescleared = -Score.tonextlevel
             Score.level = Score.level + 1
             Score.tonextlevel = (Score.level + 1) * 10
+
+            -- adjust fall and lock times to level
             if Score.level < 20 then
                 Falltime = Falltime * 0.8
             elseif Score.level < 30 then
@@ -394,7 +392,6 @@ function Player:make_ghost()
 
     -- the ghost is complete. return it.
     self.ghost = ghost
-    -- print(self.piece.map[1][2][2], ghost.x, ghost.y)
 
     -- mark piece now that ghost is found
     self.piece:mark()
