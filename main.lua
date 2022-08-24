@@ -310,7 +310,7 @@ function love.draw()
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        [" "] = {1, 1, 1, 0.7},
+        [" "] = {0.8, 0.8, 0.8, 0.7},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
         t = {0.8, 0, 1},
@@ -344,6 +344,13 @@ function love.draw()
             love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
         end
     end
+
+    -- gives player blocks a colored border
+    local c = {{1, 1, 0.5, 0.5}, {0.5, 1, 1, 0.5}}
+    ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+        love.graphics.setColor(c[block])
+        love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
+    end)
 
     love.graphics.pop()
 

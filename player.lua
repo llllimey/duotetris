@@ -276,7 +276,6 @@ function Player:TryNewPiece()
     -- print("spawning piece")
     Player.obstructed = false
     self.piece = Tetromino(Maps[Queue:next()], self.n)
-    print("spawned piece via trynewpiece")
     self.piece:mark()
     -- don't forget to make a ghost
     self:make_ghost()
