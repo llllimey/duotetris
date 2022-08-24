@@ -310,7 +310,7 @@ function love.draw()
 
     -- colors of tetrominos (n is blank)
     local colors = {
-        [" "] = {0.8, 0.8, 0.8, 0.7},
+        [" "] = {0.8, 0.8, 0.8, 0.75},
         i = {0, 0.94, 0.94},
         o = {0.94, 0.96, 0},
         t = {0.8, 0, 1},
