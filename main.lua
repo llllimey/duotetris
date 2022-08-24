@@ -62,7 +62,6 @@ function love.load()
     KICK_EVADE_MULTIPLIER = 0.85
     ENHANCEDSPEED = 20 -- how many times faster a piece falls when the down key is held
     Locktime = 0.5 -- how long a piece needs to be still to lock
-    ARE = 0.1  -- delay between locking a piece and the next one spawning
 
     Score = nil -- score doesn't exist until game starts
     LINEPOINTMULT = 130 -- how many extra points per extra line cleared
@@ -105,7 +104,7 @@ function love.keypressed(key)
     -- Controls
     if GameStarted then
         -- P1 movement
-        if P1.piece and not P1.are then
+        if P1.piece then
             if key == "left" then
                 P1.piece:move("left")
             elseif key == "right" then
@@ -150,7 +149,7 @@ function love.keypressed(key)
         P2:make_ghost()
 
         -- P2 controls
-        if P2.piece and not P2.are then
+        if P2.piece then
             if key == "a" then
                 P2.piece:move("left")
             elseif key == "d" then

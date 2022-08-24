@@ -67,10 +67,6 @@ function Player:update(dt)
         
         self.piece = nil   -- player has no piece
         self.ghost = nil   -- gotta remove the ghost, too
-        -- have a delay of ARE length before next piece spawns
-        self.are = true
-        if self.n == 1 then tick.delay(function()P1.are = false end, ARE) end
-        if self.n == 2 then tick.delay(function()P2.are = false end, ARE) end
         self:TryNewPiece() -- try to give player a new piece
     elseif self.piece then
         self.piece.time_still = self.piece.time_still + dt
@@ -269,7 +265,6 @@ end
 function Player:TryNewPiece()
     -- checks if new piece can spawn. If it can't, then don't do anything
     -- print(self.n..": trying piece")
-    if self.are then return end
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         -- print("ljkdfsn")
         Player.obstructed = true
