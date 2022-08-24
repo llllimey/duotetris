@@ -333,9 +333,6 @@ function love.draw()
     -- draws the playing field
     for i,row in ipairs(Field) do
         for j,block in pairs(row) do
-            if not colors[block] then
-                print(block)
-            end
             love.graphics.setColor(colors[block])
             love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
         end

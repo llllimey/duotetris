@@ -299,7 +299,6 @@ function TryRowClear()
 
     -- remove full rows and add new rows for each one removed
     for i,v in pairs(fullrows) do
-        -- print(v)
         table.remove(Field, v)
         table.insert(Field, 1, emptyrow)
         table.remove(Playerfield, v)

@@ -174,7 +174,7 @@ function Tetromino:new(maps, player)
         offset = FIELDWIDTH * 0.5 - width
         col = math.floor(offset * 0.5) + 1
     else
-        print("create piece: player number error")
+        return
     end
     self.col = col
     
@@ -216,7 +216,6 @@ function Tetromino:new(maps, player)
     self.col = col
     for i = 1, to_edge do
         if self:spin("countercw") then
-            -- print("ccw")
             self.obstructed = false
             return
         end
@@ -290,7 +289,6 @@ function Tetromino:fall()
         self:mark()
         self.falldistance = 0
         self.landed = true
-        -- print("hits ground :(")
         return false
     end
 
@@ -306,12 +304,6 @@ function Tetromino:fall()
     self.row = c_row
     self:mark()
     self.falldistance = self.falldistance + 1
-    -- print(self.falldistance)
-    -- if self.landed then
-    --     print("landed")
-    -- else
-    --     print("not landed")
-    -- end
     return true
 end
 
@@ -323,7 +315,6 @@ function Tetromino:move(direction)
     elseif direction == "left" then
         c_col = self.col - 1
     else
-        print("Tetromino:move: direction error")
         return
     end
     
@@ -426,9 +417,6 @@ function Tetromino:findkickmaps()
     end
     
     self.kickmaps = sort(unsorted, 1, #unsorted)
-    -- for i,v in pairs(self.kickmaps) do
-    --     print("("..v.x..", "..v.y..")")
-    -- end
 end
 
 
@@ -443,7 +431,6 @@ function Tetromino:spin(direction)
     elseif direction == "countercw" then
         rot_mult = -1
     elseif direction ~= "kick 1" and direction ~= "kick 2" then
-        print("Tetromino:spin: direction error")
         return
     end
 
@@ -491,7 +478,6 @@ function Tetromino:spin(direction)
         if not self:collides_at(row + ykick, col + xkick, c_rotation) then
             -- if it is able to find a working kick
             -- set location to the working kick
-            -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
             self.row = row + ykick
             self.col = col + xkick
             self.rotation = c_rotation
@@ -501,7 +487,6 @@ function Tetromino:spin(direction)
             if self.obstructed then
                 return true
             end
-            -- print("row: "..self.row.." col: "..self.col.." map: "..self.rotation)
             break
         end
     end
@@ -515,7 +500,6 @@ function Tetromino:spin(direction)
     if self:collides_at(self.row - 1, self.col, self.rotation) then
         self.falldistance = 0
         self.landed = true
-        -- print("landed via spin")
     end
 
     -- doesn't collide, so move :))
@@ -528,6 +512,5 @@ function Tetromino:spin(direction)
         self.time_still = self.time_still - self.time_still * self.evade_strength
         self.evade_strength = self.evade_strength * KICK_EVADE_MULTIPLIER
     end
-    -- print(self.evade_strength)
     return true
 end
