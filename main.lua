@@ -379,7 +379,7 @@ function love.draw()
             heldblocksize = miniblocksize
         else
             -- drawing settings for large pieces
-            heldblocksize = math.floor(4 / width)
+            heldblocksize = math.floor(4 * blocksize / width)
             -- block size is rounded down, but it should at least be 1
             if heldblocksize < 1 then
                 heldblocksize = 1

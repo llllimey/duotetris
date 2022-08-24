@@ -114,8 +114,17 @@ function Player:givemap()
     end)
 
     -- makes other player remap to incorperate the new blocks
-    if self.n == 1 then P2:remap() end
-    if self.n == 2 then P1:remap() end
+    -- also resets other player's fall time and lock time so they have time to react to this
+    if self.n == 1 then
+        P2:remap()
+        P2.piece.time_next_fall = Falltime
+        P2.piece.still_time = 0
+    end
+    if self.n == 2 then
+        P1:remap()
+        P1.piece.time_next_fall = Falltime
+        P1.piece.still_time = 0
+    end
 end
 
 -- rechecks the playerfield for tiles belonging to the player, then updates map for tiles
@@ -251,7 +260,6 @@ function Player:remap()
     self.maxkick = math.ceil(width * 0.5)
     self.piece:findkickmaps()
     self:make_ghost()
-    self.piece.time_next_fall = Falltime
 end
 
 function Player:TryNewPiece()
@@ -260,7 +268,7 @@ function Player:TryNewPiece()
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         -- print("ljkdfsn")
         Player.obstructed = true
-        -- print("obstructed from canspawn")
+        print("obstructed from canspawn")
         return
     end
 
