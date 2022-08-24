@@ -10,7 +10,7 @@ function Player:update(dt)
     if Player.obstructed then
         -- if the player is obstructed, keep trying to spawn
         self:TryNewPiece()
-        print("trynewpiece from obstructed")
+        -- print("trynewpiece from obstructed")
         return
     end
     -- self.piece.time_next_fall keeps track of how long until a piece should try to fall again
@@ -260,6 +260,7 @@ function Player:TryNewPiece()
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         -- print("ljkdfsn")
         Player.obstructed = true
+        -- print("obstructed from canspawn")
         return
     end
 

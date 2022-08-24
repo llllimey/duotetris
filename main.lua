@@ -81,7 +81,7 @@ function love.load()
 end
 
 function love.keypressed(key)
-    if key == "g" then Debug:printfields() end
+    -- if key == "g" then Debug:printfields() end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -195,6 +195,7 @@ end
 function love.focus(f) Focus = f end
 
 function love.update(dt)
+    -- Debug:printobstructed()
     -- starting sequence
     if GameStarting then
         -- counts to 3 seconds
@@ -207,14 +208,11 @@ function love.update(dt)
         if Begin_overlay == 3 then
             -- add pieces to queue
             Queue:add_bag()
-            for i,v in pairs(Queue.pieces) do print(v) end
+            -- for i,v in pairs(Queue.pieces) do print(v) end
             -- spawn in players
-            P1.piece = Tetromino(Maps[Queue:next()], 1)
-            P2.piece = Tetromino(Maps[Queue:next()], 2)
-            P1:make_ghost()
-            P2:make_ghost()
-            P1.piece:mark()
-            P2.piece:mark()
+            -- Debug:printobstructed()
+            P1:TryNewPiece()
+            P2:TryNewPiece()
             
             Score = {points = 0, lines = 0, level = 0, tonextlevel = 10}
 
@@ -499,6 +497,6 @@ function Debug:printobstructed()
     local o1 = ""
     local o2 = ""
     if P1.obstructed then o1 = "true " end
-    if P2.obstructed then o2 = "true " end
+    -- if P2.obstructed then o2 = "true " end
     io.write(o1..o2)
 end
