@@ -7,7 +7,6 @@ function love.load()
     love.window.setTitle("duotetris")
 
     Object = require "classic"
-    tick = require "tick"
     
     require "tetrominos"
     require "player" -- also contains row clear function
@@ -83,7 +82,7 @@ function love.load()
 end
 
 function love.keypressed(key)
-    -- if key == "g" then Debug:printfields() end
+    if key == "g" then Debug:printfields() end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -197,7 +196,6 @@ end
 function love.focus(f) Focus = f end
 
 function love.update(dt)
-    tick.update(dt)
     -- Debug:printobstructed()
     -- starting sequence
     if GameStarting then
@@ -475,6 +473,7 @@ function Debug:printfields(message)
                 io.write("• ")
             end
         end
+        if i < 10 then i = i.." " end
         io.write("|"..i.. "          ")
         for j,block in pairs(Field[i]) do
             if block ~= " " then
@@ -485,6 +484,7 @@ function Debug:printfields(message)
         end
         print("|"..i)
     end
+    print()
 end
 -- prints all maps from a list of maps
 function Debug:printmaps(maps, message)

@@ -268,7 +268,7 @@ function Player:TryNewPiece()
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         -- print("ljkdfsn")
         Player.obstructed = true
-        print("obstructed from canspawn")
+        -- print("obstructed from canspawn")
         return
     end
 
