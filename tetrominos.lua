@@ -143,7 +143,9 @@ Tetromino = Object:extend()
 --   row is on the y axis, col is on the x axis
 function Tetromino:new(maps, player)
     self.map = maps
-    self.maxkick = math.ceil(#self.map[1] * 0.5)
+    local width = #self.map[1]
+    self.width = width
+    self.maxkick = math.ceil(width * 0.5)
     self:findkickmaps()
     self.p = player -- which player the tetromino belongs to
 
@@ -159,8 +161,7 @@ function Tetromino:new(maps, player)
 
     self.evade_strength = 1
 
-    -- tetrominos spawn on the center of their side, erring away from the middle
-    local width = #self.map[1]
+    -- tetrominos spawn on the center of their side, erring away from the middlex
     local offset
     local col
     local pdirection
@@ -246,7 +247,7 @@ end
 function Tetromino:erase()
     ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
         Field[y][x] = " "
-        Playerfield[x][y] = " "
+        Playerfield[y][x] = " "
     end)
 end
 

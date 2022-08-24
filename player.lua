@@ -57,7 +57,7 @@ function Player:update(dt)
         
         self.piece = nil   -- player has no piece
         self:TryNewPiece() -- try to give player a new piece
-    else
+    elseif self.piece then
         self.piece.time_still = self.piece.time_still + dt
         if not self.piece.landed then
             self.piece.time_still = 0
@@ -79,19 +79,193 @@ end
 -- checks if a player is on top of another player
 function Player:onplayer()
     local me = self.n
+    if me == 1 and not P2.piece then return end
+    if me == 2 and not P1.piece then return end
     return ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
+        if y > FIELDHEIGHT then return end
         local underme = Playerfield[y + 1][x]
-        if underme ~= " "              -- if there is a player under me
-            and me - underme ~= 0 then -- and the player is not me
-            return true                -- then i am on another player
+        if underme ~= " "          -- if there is a player under me
+            and underme ~= me then -- and the player is not me
+            return true            -- then i am on another player
         end
     end)
 end
 
 -- gives its map to the other player
 function Player:givemap()
-    -- update map
-    -- update kickmaps (call findkickmaps)
+    local otherp
+    if self.n == 1 then otherp = 2
+    elseif self.n == 2 then otherp = 1 end
+
+    print("line 99")
+    for i = 1, #Field do
+        for j,block in pairs(Playerfield[i]) do
+            if block ~= " " then
+                io.write(block.." ")
+            else
+                io.write("• ")
+            end
+        end
+        print("|"..i)
+    end
+    -- set all of its blocks to belong to the other player
+    ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
+        Playerfield[y][x] = otherp
+    end)
+    print("line 99")
+    for i = 1, #Field do
+        for j,block in pairs(Playerfield[i]) do
+            if block ~= " " then
+                io.write(block.." ")
+            else
+                io.write("• ")
+            end
+        end
+        print("|"..i)
+    end
+    
+    -- find outer bounds for the new shape
+    local xmost = 1
+    local xleast = FIELDWIDTH
+    local ymost = 1
+    local yleast = FIELDHEIGHT
+    ForMapOccupiesDo(Playerfield, 1, 1, function(x, y)
+        if x > xmost then xmost = x end
+        if x < xleast then xleast = x end
+        if y > ymost then ymost = y end
+        if y < yleast then yleast = y end
+    end)
+    local width = xmost - xleast + 1
+    local height = ymost - yleast + 1
+
+    print(xmost, xleast, ymost, yleast)
+    
+
+    -- make a map for player stuff within the bounds
+    local map = {}
+    local index = 0
+    for y=yleast, ymost do
+        index = index + 1
+        table.insert(map, {})
+        for x=xleast, xmost do
+            if Playerfield[y][x] == " " then
+                table.insert(map[index], " ")
+            else
+                table.insert(map[index], Field[y][x])
+            end
+        end
+    end
+
+    -- rotates table 'a' clockwise
+    local function rotate(a)
+        local b = {}
+        for i = 1, #a[1] do
+            table.insert(b, {})
+            for j = 1, #a do
+                table.insert(b[i], a[j][i])
+            end
+        end
+        return b
+    end
+
+    -- ensure map is horizontal
+    if height > width then
+        map = rotate(map)
+
+        local temp = width
+        width = height
+        height = temp
+    end
+
+    -- see if current map is top or bottom-heavy.
+    local to_mid = math.floor(height * 0.5)
+    local wtop = 0     --weight of top half
+    local wbottom = 0  --weight of bottom half
+    for i = 1, to_mid do
+        for j,v in pairs(map[i]) do
+            if v ~= " " then
+                wtop = wtop + 1
+            end
+        end
+        for j,v in pairs(map[height - (i -1)]) do
+            if v ~= " " then
+                wbottom = wbottom + 1
+            end
+        end
+    end
+    local upsidedown = false
+    if wtop < wbottom then
+        upsidedown = true
+    end
+
+
+    -- add padding to map to make it square
+    local pad_total = width - height
+    local pad_top
+    -- padding errs towards less padding on heavier half
+    if upsidedown then
+        pad_top = math.ceil(pad_total * 0.5)
+    else
+        pad_top = math.floor(pad_total * 0.5)
+    end
+    local pad_bottom = pad_total - pad_top
+
+    -- make a padding row
+    local padding = {}
+    for i=1, width do table.insert(padding, " ") end
+
+    -- insert padding to top and bottom of map
+    for i=1, pad_bottom do table.insert(map, padding) end
+    for i=1, pad_top do table.insert(map, 1, padding) end
+
+    -- rotation time
+    local complete_maps = {}
+    local rotation
+    if not upsidedown then
+        rotation = 1
+        complete_maps[1] = map
+        complete_maps[2] = rotate(complete_maps[1])
+        complete_maps[3] = rotate(complete_maps[2])
+        complete_maps[4] = rotate(complete_maps[3])
+    else
+        rotation = 3
+        complete_maps[3] = map
+        complete_maps[4] = rotate(complete_maps[3])
+        complete_maps[1] = rotate(complete_maps[4])
+        complete_maps[2] = rotate(complete_maps[1])
+    end
+
+    -- for i,m in pairs(complete_maps) do
+    --     print("____________")
+    --     for j,r in pairs(m) do
+    --         print()
+    --         for k,b in pairs(r) do
+    --             io.write(b)
+    --         end
+    --     end
+    --     print()
+    -- end
+
+    -- update other player with new maps, location, and kickmaps
+    if self.n == 1 then
+        P2.piece.width = width
+        P2.piece.row = yleast
+        P2.piece.width = xmost
+        P2.piece.rotation = rotation
+        P2.piece.map = complete_maps
+        P2.piece:findkickmaps()
+        P2:make_ghost()
+        P2.piece.time_next_fall = Falltime
+    elseif self.n == 2 then
+        P1.piece.width = width
+        P1.piece.row = yleast
+        P1.piece.width = xmost
+        P1.piece.rotation = rotation
+        P1.piece.map = complete_maps
+        P1.piece:findkickmaps()
+        P1.make_ghost()
+        P1.piece.time_next_fall = Falltime
+    end
 end
 
 
