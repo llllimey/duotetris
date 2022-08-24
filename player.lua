@@ -6,9 +6,11 @@ end
 
 -- updates tetromino to fall or lock
 function Player:update(dt)
+    -- if self.obstructed then print(self.n) end
     if Player.obstructed then
         -- if the player is obstructed, keep trying to spawn
         self:TryNewPiece()
+        print("trynewpiece from obstructed")
         return
     end
     -- self.piece.time_next_fall keeps track of how long until a piece should try to fall again
@@ -64,6 +66,7 @@ function Player:update(dt)
         end
         
         self.piece = nil   -- player has no piece
+        self.ghost = nil   -- also, make the ghost disappear
         self:TryNewPiece() -- try to give player a new piece
     elseif self.piece then
         self.piece.time_still = self.piece.time_still + dt
@@ -253,15 +256,18 @@ end
 
 function Player:TryNewPiece()
     -- checks if new piece can spawn. If it can't, then don't do anything
-    print(self.n..": trying piece")
+    -- print(self.n..": trying piece")
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
-        Player.obstruced = true
+        -- print("ljkdfsn")
+        Player.obstructed = true
         return
     end
 
     -- new piece spawns 
+    -- print("spawning piece")
     Player.obstructed = false
     self.piece = Tetromino(Maps[Queue:next()], self.n)
+    print("spawned piece via trynewpiece")
     self.piece:mark()
     -- don't forget to make a ghost
     self:make_ghost()
@@ -271,7 +277,7 @@ end
 function CanSpawn(map, player)
     local check = Tetromino(map, player)
     if check.obstructed then
-        print("canspawn obstructed")
+        -- print("canspawn obstructed")
         return false
     end
     return true
@@ -319,8 +325,8 @@ function TryRowClear()
     end
 
     -- if other player got deleted with the rows, update their map to reflect that
-    if deletedplayer == 1 then P2:remap()
-    elseif deletedplayer == 2 then P1:remap() end
+    if deletedplayer == 1 then P1:remap()
+    elseif deletedplayer == 2 then P2:remap() end
 
     -- if 4+ lines are cleared, then do a fun tetris effect
     if linescleared > 3 then

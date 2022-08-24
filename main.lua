@@ -81,10 +81,13 @@ function love.load()
 end
 
 function love.keypressed(key)
+    if key == "g" then Debug:printfields() end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
             love.load()
+            P2.obstructed = false
+            P1.obstructed = false
         end
         return
     end
@@ -204,6 +207,7 @@ function love.update(dt)
         if Begin_overlay == 3 then
             -- add pieces to queue
             Queue:add_bag()
+            for i,v in pairs(Queue.pieces) do print(v) end
             -- spawn in players
             P1.piece = Tetromino(Maps[Queue:next()], 1)
             P2.piece = Tetromino(Maps[Queue:next()], 2)
@@ -223,12 +227,6 @@ function love.update(dt)
     -- don't update if player clicks out of game window
     if not Focus then return end
 
-
-    -- if both players can't spawn pieces, then the game is over
-    if P1.obstruced and P2.obstructed then
-        print("game over")
-        GameOver = true
-    end
 
     -- don't update if game is over
     if GameOver then
@@ -261,6 +259,7 @@ function love.update(dt)
         end
         P1:update(dt)
     end
+
     if P2.piece then
         if love.keyboard.isDown("s") then
             P2.piece.speed = ENHANCEDSPEED
@@ -268,6 +267,12 @@ function love.update(dt)
             P2.piece.speed = 1
         end
         P2:update(dt)
+    end
+
+    -- if both players can't spawn pieces, then the game is over
+    if P1.obstructed and P2.obstructed then
+        print("game over")
+        GameOver = true
     end
 end
 
@@ -488,4 +493,12 @@ function Debug:printmaps(maps, message)
         end
         print()
     end
+end
+-- prints obstruction status of both players
+function Debug:printobstructed()
+    local o1 = ""
+    local o2 = ""
+    if P1.obstructed then o1 = "true " end
+    if P2.obstructed then o2 = "true " end
+    io.write(o1..o2)
 end
