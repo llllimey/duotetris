@@ -223,6 +223,13 @@ function love.update(dt)
     -- don't update if player clicks out of game window
     if not Focus then return end
 
+
+    -- if both players can't spawn pieces, then the game is over
+    if P1.obstruced and P2.obstructed then
+        print("game over")
+        GameOver = true
+    end
+
     -- don't update if game is over
     if GameOver then
         return
@@ -261,11 +268,6 @@ function love.update(dt)
             P2.piece.speed = 1
         end
         P2:update(dt)
-    end
-
-    -- if both players can't spawn pieces, then the game is over
-    if P1.obstruced and P2.obstructed then
-        GameOver = true
     end
 end
 

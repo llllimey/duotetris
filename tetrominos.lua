@@ -197,25 +197,32 @@ function Tetromino:new(maps, player)
 
     self.row = FIELDHEIGHT + 1 - 20 - whitespace
 
-
     -- if the normal spawn location is unavailable, kick to the nearest spot
     -- if the normal range of kicks doesn't work, try moving to the left/right and try again
-
+    
+    -- how far the piece is to the other edge
     local to_edge = col
     if player == 2 then
         to_edge = FIELDWIDTH - (col + (width))
     end
+
+    self.spawned = false
+    -- try kicking player, moving to the edge if it doesn't work
     for i = 1, to_edge do
         if self:spin("kick "..player) then
+            self.spawned = true
             self.obstructed = false
             return
         end
         self.obstructed = true
         self.col = self.col + pdirection
     end
+
+    -- if normal kicks don't work, try with spin kicks instead
     self.col = col
     for i = 1, to_edge do
         if self:spin("countercw") then
+            self.spawned = true
             self.obstructed = false
             return
         end
@@ -303,6 +310,7 @@ function Tetromino:fall()
 
     self.row = c_row
     self:mark()
+    self.justspun = false
     self.falldistance = self.falldistance + 1
     return true
 end
@@ -329,6 +337,7 @@ function Tetromino:move(direction)
     -- doesn't collide, so move :))
     self.col = c_col
     self:mark()
+    self.justspun = false
 
     -- also, let piece not lock as fast if they're aboutta be locked
     -- but the more times they try to move to evade being locked, the less effective it is
@@ -463,7 +472,7 @@ function Tetromino:spin(direction)
         end
     end
 
-    if not self.obstructed then self:erase() end
+    if self.spawned then self:erase() end
     -- check to see if it would collide after moving to new orientation
     -- if it collides, try kicking the piece
     -- try kicking up to a distance of ciel(0.5 piecesize) in one direction,
@@ -484,7 +493,7 @@ function Tetromino:spin(direction)
 
 
             -- if here from trying to spawn, return true for it is able to be kicked
-            if self.obstructed then
+            if not self.spawned then
                 return true
             end
             break
@@ -492,7 +501,7 @@ function Tetromino:spin(direction)
     end
 
     -- if here from trying to spawn, return false for it is not able to be kicked
-    if self.obstructed then
+    if not self.spawned then
         return false
     end
 
@@ -504,6 +513,7 @@ function Tetromino:spin(direction)
 
     -- doesn't collide, so move :))
     self:mark()
+    self.justspun = true
 
     -- also, let piece not lock as fast if they're aboutta be locked
     -- but the more times they try to move to evade being locked, the less effective it is

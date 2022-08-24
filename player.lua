@@ -28,16 +28,24 @@ function Player:update(dt)
 
         -- from henceforth, the piece is locked
 
-
         -- check if piece landed by spinning
+        -- spin doesn't count if it only happened becuase player got sandwiched by other player
+        if self.n == 1 and P2.piece then P2.piece:erase() end
+        if self.n == 2 and P1.piece then P1.piece:erase() end
         if      self.piece:collides_at(row - 1, col, rot) -- couldn't arrive by falling
             and self.piece:collides_at(row, col + 1, rot) -- couldn't arrive by moving left
             and self.piece:collides_at(row, col - 1, rot) -- couldn't arrive by moving right
+            and self.piece.justspun  -- and the last action the piece did was spin
             then
+            if Event[2].yes == true then
+                Event[2].time = 0
+            end
             Event[1].yes = true
             Event[1].mult = SPINPOINTMULT
             print("spin")
         end
+        if self.n == 1 and P2.piece then P2.piece:mark() end
+        if self.n == 2 and P1.piece then P1.piece:mark() end
         self.piece:mark()
 
         -- if piece locks, then player is able to use hold pieces again
@@ -82,7 +90,7 @@ function Player:onplayer()
     if me == 1 and not P2.piece then return end
     if me == 2 and not P1.piece then return end
     return ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
-        if y > FIELDHEIGHT then return end
+        if y >= FIELDHEIGHT then return end
         local underme = Playerfield[y + 1][x]
         if underme ~= " "          -- if there is a player under me
             and underme ~= me then -- and the player is not me
@@ -245,6 +253,7 @@ end
 
 function Player:TryNewPiece()
     -- checks if new piece can spawn. If it can't, then don't do anything
+    print(self.n..": trying piece")
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         Player.obstruced = true
         return
@@ -262,6 +271,7 @@ end
 function CanSpawn(map, player)
     local check = Tetromino(map, player)
     if check.obstructed then
+        print("canspawn obstructed")
         return false
     end
     return true
@@ -314,6 +324,9 @@ function TryRowClear()
 
     -- if 4+ lines are cleared, then do a fun tetris effect
     if linescleared > 3 then
+        if Event[2].yes == true then
+            Event[2].time = 0
+        end
         Event[2].yes = true
         print("tetris")
     end
@@ -329,6 +342,9 @@ function TryRowClear()
     end
     -- effect for full clear (it's the same effect as tetris)
     if fullclear_mult == 8 then
+        if Event[2].yes == true then
+            Event[2].time = 0
+        end
         Event[2].yes = true
         print("full clear")
     end
