@@ -51,8 +51,8 @@ function Player:update(dt)
         else
             -- if it isn't locked on to a player, then it must be on the ground
             -- so, try clearing rows
-            TryRowClear()
             self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
+            TryRowClear()
         end
         
         self.piece = nil   -- player has no piece
@@ -97,50 +97,32 @@ function Player:givemap()
     if self.n == 1 then otherp = 2
     elseif self.n == 2 then otherp = 1 end
 
-    print("line 99")
-    for i = 1, #Field do
-        for j,block in pairs(Playerfield[i]) do
-            if block ~= " " then
-                io.write(block.." ")
-            else
-                io.write("• ")
-            end
-        end
-        print("|"..i)
-    end
     -- set all of its blocks to belong to the other player
     ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
         Playerfield[y][x] = otherp
     end)
-    print("line 99")
-    for i = 1, #Field do
-        for j,block in pairs(Playerfield[i]) do
-            if block ~= " " then
-                io.write(block.." ")
-            else
-                io.write("• ")
-            end
-        end
-        print("|"..i)
-    end
-    
+
+    if self.n == 1 then P2:remap() end
+    if self.n == 2 then P1:remap() end
+end
+
+-- rechecks the playerfield for tiles belonging to the player, then updates map for tiles
+function Player:remap()
     -- find outer bounds for the new shape
     local xmost = 1
     local xleast = FIELDWIDTH
     local ymost = 1
     local yleast = FIELDHEIGHT
-    ForMapOccupiesDo(Playerfield, 1, 1, function(x, y)
-        if x > xmost then xmost = x end
-        if x < xleast then xleast = x end
-        if y > ymost then ymost = y end
-        if y < yleast then yleast = y end
+    ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+        if block == self.n then
+            if x > xmost then xmost = x end
+            if x < xleast then xleast = x end
+            if y > ymost then ymost = y end
+            if y < yleast then yleast = y end
+            end
     end)
     local width = xmost - xleast + 1
     local height = ymost - yleast + 1
-
-    print(xmost, xleast, ymost, yleast)
-    
-
     -- make a map for player stuff within the bounds
     local map = {}
     local index = 0
@@ -159,10 +141,12 @@ function Player:givemap()
     -- rotates table 'a' clockwise
     local function rotate(a)
         local b = {}
-        for i = 1, #a[1] do
+        local ilen = #a[1] -- 4
+        local jlen = #a    -- 3
+        for i = 1, ilen do  -- repeats 4 times
             table.insert(b, {})
-            for j = 1, #a do
-                table.insert(b[i], a[j][i])
+            for j = 1, jlen do   -- repeats 3 times
+                b[i][j] = a[jlen - j + 1][i]
             end
         end
         return b
@@ -197,7 +181,6 @@ function Player:givemap()
     if wtop < wbottom then
         upsidedown = true
     end
-
 
     -- add padding to map to make it square
     local pad_total = width - height
@@ -240,34 +223,23 @@ function Player:givemap()
     --     for j,r in pairs(m) do
     --         print()
     --         for k,b in pairs(r) do
-    --             io.write(b)
+    --             if b == " " then b = "•" end
+    --             io.write(b.." ")
     --         end
     --     end
     --     print()
     -- end
 
-    -- update other player with new maps, location, and kickmaps
-    if self.n == 1 then
-        P2.piece.width = width
-        P2.piece.row = yleast
-        P2.piece.width = xmost
-        P2.piece.rotation = rotation
-        P2.piece.map = complete_maps
-        P2.piece:findkickmaps()
-        P2:make_ghost()
-        P2.piece.time_next_fall = Falltime
-    elseif self.n == 2 then
-        P1.piece.width = width
-        P1.piece.row = yleast
-        P1.piece.width = xmost
-        P1.piece.rotation = rotation
-        P1.piece.map = complete_maps
-        P1.piece:findkickmaps()
-        P1.make_ghost()
-        P1.piece.time_next_fall = Falltime
-    end
+    -- update player with new data
+    self.piece.width = width
+    self.piece.row = yleast - pad_top
+    self.piece.col = xleast
+    self.piece.rotation = rotation
+    self.piece.map = complete_maps
+    self.piece:findkickmaps()
+    self:make_ghost()
+    self.piece.time_next_fall = Falltime
 end
-
 
 function Player:TryNewPiece()
     -- checks if new piece can spawn. If it can't, then don't do anything
@@ -293,16 +265,20 @@ function CanSpawn(map, player)
     return true
 end
 
--- clears rows if they are filled
--- if the other player is in the row, they get removed with it
+-- clears rows if they are filled, even if tiles belong to the other player
 function TryRowClear()
     local fullrows = {}
+    local deletedplayer
     for i = 1, FIELDHEIGHT do
         -- if a row is full of blocks, then keep track of it
         local count = FIELDWIDTH
         for j,block in pairs(Field[i]) do
             if block ~= " " then
                 count = count - 1
+                if not deletedplayer then 
+                    local tileplayer = Playerfield[i][j]
+                    if tileplayer ~= " " then deletedplayer = tileplayer end
+                end
             end
         end
         if count == 0 then
@@ -330,6 +306,11 @@ function TryRowClear()
         table.remove(Playerfield, v)
         table.insert(Playerfield, 1, emptyrow)
     end
+
+    -- if other player got deleted with the rows, update their map to reflect that
+    if deletedplayer == 1 then P2:remap()
+    elseif deletedplayer == 2 then P1:remap() end
+
 
     -- if 4+ lines are cleared, then do a fun tetris effect
     if linescleared > 3 then

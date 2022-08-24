@@ -74,7 +74,7 @@ function love.load()
     Score = nil -- score doesn't exist until game starts
     LINEPOINTMULT = 130 -- how many extra points per extra line cleared
     SPINPOINTMULT = 3 -- multiply the points by this if it's a spin
-    Falltime = 1
+    Falltime = 5
 
 
     Event = {}  -- keeps track of events that need graphics
@@ -247,7 +247,7 @@ function love.update(dt)
     if GameOver then
         return
     end
-    
+
 
     -- update event effects
     for i,v in ipairs(Event) do
@@ -468,4 +468,27 @@ end
 
 function love.quit()
     print("the game is done.")
+end
+
+Debug = {}
+function Debug:printfields(message)
+    if message then print(message) end
+    for i = 1, #Field do
+        for j,block in pairs(Playerfield[i]) do
+            if block ~= " " then
+                io.write(block.." ")
+            else
+                io.write("• ")
+            end
+        end
+        io.write("|"..i.. "          ")
+        for j,block in pairs(Field[i]) do
+            if block ~= " " then
+                io.write(block.." ")
+            else
+                io.write("• ")
+            end
+        end
+        print("|"..i)
+    end
 end
