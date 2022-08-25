@@ -13,7 +13,7 @@ function love.load()
 
     FIELDHEIGHT = 40
     FIELDHEIGHTVISIBLE = 20.25
-    FIELDWIDTH = 15
+    FIELDWIDTH = 13
 
 
     -- Field stores everything on the field in the form of letter tiles or
@@ -284,7 +284,7 @@ function love.draw()
 
     -- centers and scales everything depending on window size
     local miniblockscale = 0.9
-    local border = 5 * miniblockscale
+    local border = 6 * miniblockscale
     local display_width_blocks = (FIELDWIDTH + border + border + 2)
     local wblock = width / display_width_blocks
     local hblock = height / (FIELDHEIGHTVISIBLE)
@@ -389,7 +389,7 @@ function love.draw()
             heldblocksize = miniblocksize
         else
             -- drawing settings for large pieces
-            heldblocksize = math.floor(4 * blocksize / width)
+            heldblocksize = math.floor((border-1) * blocksize / width)
             -- block size is rounded down, but it should at least be 1
             if heldblocksize < 1 then
                 heldblocksize = 1
