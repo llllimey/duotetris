@@ -7,10 +7,9 @@ end
 -- updates tetromino to fall or lock
 function Player:update(dt)
     -- if self.obstructed then print(self.n) end
-    if Player.obstructed then
+    if self.obstructed and not self.piece then
         -- if the player is obstructed, keep trying to spawn
         self:TryNewPiece()
-        -- print("trynewpiece from obstructed")
         return
     end
     -- self.piece.time_next_fall keeps track of how long until a piece should try to fall again
@@ -24,6 +23,8 @@ function Player:update(dt)
         self.piece:erase() -- always gotta erase before checking collisions
         -- don't lock if the piece can still fall downwards
         if not self.piece:collides_at(row + 1, col, rot) then
+            self.piece.time_still = 0
+            self.piece.time_next_fall = Locktime + 1
             self.piece:mark()
             return
         end
@@ -62,6 +63,7 @@ function Player:update(dt)
             -- if it isn't locked on to a player, then it must be on the ground
             -- so, try clearing rows
             self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
+            self.piece = nil
             TryRowClear()
         end
         
@@ -142,6 +144,7 @@ function Player:remap()
     -- if no bounds are found, then there must be no tiles for the player
     -- so, player needs to try getting a new piece
     if xmost == 0 then
+        Player.piece = nil
         Player:TryNewPiece()
     end
 
@@ -367,9 +370,9 @@ function TryRowClear()
         table.insert(Playerfield, 1, emptyrow)
     end
 
-    -- if other player got deleted with the rows, update their map to reflect that
-    if deletedplayer == 1 then P1:remap()
-    elseif deletedplayer == 2 then P2:remap() end
+    -- Remap other player to reflect these changes
+    if not P1.piece and P2.piece then P2:remap() end
+    if not P2.piece and P1.piece then P1:remap() end
 
     -- if 4+ lines are cleared, then do a fun tetris effect
     if linescleared > 3 then

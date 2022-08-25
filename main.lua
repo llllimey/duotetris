@@ -82,7 +82,7 @@ function love.load()
 end
 
 function love.keypressed(key)
-    if key == "g" then Debug:debugkey() end
+    -- if key == "g" then Debug:debugkey() end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -253,12 +253,6 @@ function love.update(dt)
         end
     end
 
-    -- if both players can't spawn pieces, then the game is over
-    if P1.obstructed and not P1.piece and P2.obstructed and not P2.piece then
-        print("game over")
-        GameOver = true
-    end
-
     -- update existing pieces
     if P1.piece then
         if love.keyboard.isDown("down") then
@@ -276,6 +270,11 @@ function love.update(dt)
             P2.piece.speed = 1
         end
         P2:update(dt)
+    end
+    -- if both players can't spawn pieces, then the game is over
+    if P1.obstructed and not P1.piece and P2.obstructed and not P2.piece then
+        print("game over")
+        GameOver = true
     end
 end
 
@@ -462,7 +461,7 @@ function love.draw()
 end
 
 function love.quit()
-    print("the game is done.")
+    -- print("the game is done.")
 end
 
 
@@ -472,6 +471,16 @@ Debug = {}
 -- does these actions when the debug key, g,  is pressed
 function Debug:debugkey()
     self:printfields()
+    self:printobstructed()
+    print(P2.time_next_fall)
+    if P2.piece then
+        print("p2 has a piece", P2.piece.time_still, P2.piece.time_next_fall)
+        self:printmaps(P2.piece.map)
+    end
+    if P1.piece then
+        print("p1 has a piece", P1.piece.time_still, P1.piece.time_next_fall)
+        self:printmaps(P2.piece.map)
+    end
 end
 
 -- prints out the Field and Playerfield
@@ -517,7 +526,7 @@ end
 function Debug:printobstructed()
     local o1 = ""
     local o2 = ""
-    if P1.obstructed then o1 = "true " end
-    -- if P2.obstructed then o2 = "true " end
+    if P1.obstructed then o1 = "P1 obstructed " end
+    if P2.obstructed then o2 = "P2 obstructed " end
     io.write(o1..o2)
 end
