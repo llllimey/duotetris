@@ -124,7 +124,7 @@ end
 
 -- rechecks the playerfield for tiles belonging to the player, then updates map for tiles
 function Player:remap()
-    Debug:printfields("beginning remap")
+    -- Debug:printfields("beginning remap")
     -- find outer bounds for the new shape
     local xmost = 0
     local xleast = FIELDWIDTH
@@ -179,11 +179,9 @@ function Player:remap()
 
     -- ensure map is horizontal
     local rotation = 1
-    print(rotation)
     if height > width then
         map = rotate(map)
         rotation = 4
-        print(rotation)
 
         local temp = width
         width = height
@@ -209,7 +207,7 @@ function Player:remap()
         end
     end
     local upsidedown = false
-    print("wtop", wtop, "wbot", wbottom)
+    -- print("wtop", wtop, "wbot", wbottom)
     if wbottom > wtop then
         upsidedown = true
         if rotation == 1 then rotation = 3 end
@@ -251,23 +249,22 @@ function Player:remap()
         complete_maps[2] = rotate(complete_maps[1])
     end
         
-    Debug:printmaps(complete_maps)
-    print("rotation before remap: "..self.piece.rotation)
+    -- Debug:printmaps(complete_maps)
+    -- print("rotation", rotation)
 
     -- update player with new data
     self.piece.width = width
 
-    local offset
-    if not upsidedown then offset = pad_top
-    else offset = pad_bottom end
+    -- offset the piece to make up for any padding created
+    local offset = pad_top
+    if rotation == 2 or 3 then offset = pad_bottom end
     
-    if rotation == 1 or rotation == 3 then
-        self.piece.row = ymost - offset
+    if rotation == 1 or 3 then
+        self.piece.row = yleast - offset
         self.piece.col = xleast
     else
-        self.piece.row = ymost
+        self.piece.row = yleast
         self.piece.col = xleast - offset
-    end
 
     self.piece.rotation = rotation
     self.piece.map = complete_maps
@@ -275,7 +272,7 @@ function Player:remap()
     self.maxkick = math.ceil(width * 0.5)
     self.piece:findkickmaps()
     self:make_ghost()
-    Debug:printfields()
+    -- Debug:printfields()
 end
 
 function Player:TryNewPiece()
