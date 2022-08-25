@@ -500,15 +500,15 @@ function Tetromino:spin(direction)
         end
     end
 
-    -- if here from trying to spawn, return false for it is not able to be kicked
-    if not self.spawned then
-        return false
-    end
-
     -- check if it is now touching the gound
     if self:collides_at(self.row - 1, self.col, self.rotation) then
         self.falldistance = 0
         self.landed = true
+    end
+
+    -- if here from trying to spawn, return false for it is not able to be kicked
+    if not self.spawned then
+        return false
     end
 
     -- doesn't collide, so move :))

@@ -82,7 +82,7 @@ function love.load()
 end
 
 function love.keypressed(key)
-    if key == "g" then Debug:printfields() end
+    if key == "g" then Debug:debugkey() end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -462,6 +462,12 @@ end
 
 -- some useful print commands for debugging
 Debug = {}
+
+-- does these actions when the debug key, g,  is pressed
+function Debug:debugkey()
+    self:printfields()
+end
+
 -- prints out the Field and Playerfield
 function Debug:printfields(message)
     if message then print(message) end
@@ -492,11 +498,11 @@ function Debug:printmaps(maps, message)
     for i,m in pairs(maps) do
         print(i.."_________")
         for j,r in pairs(m) do
-            print()
             for k,b in pairs(r) do
                 if b == " " then b = "•" end
                 io.write(b.." ")
             end
+            print()
         end
         print()
     end

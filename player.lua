@@ -124,7 +124,7 @@ end
 
 -- rechecks the playerfield for tiles belonging to the player, then updates map for tiles
 function Player:remap()
-    -- Debug:printfields("beginning remap")
+    Debug:printfields("beginning remap")
     -- find outer bounds for the new shape
     local xmost = 0
     local xleast = FIELDWIDTH
@@ -212,7 +212,7 @@ function Player:remap()
         upsidedown = true
         if rotation == 1 then rotation = 3 end
         if rotation == 4 then rotation = 2 end
-        print(rotation)
+        -- print(rotation)
     end
 
     -- add padding to map to make it square
@@ -249,22 +249,37 @@ function Player:remap()
         complete_maps[2] = rotate(complete_maps[1])
     end
         
-    -- Debug:printmaps(complete_maps)
-    -- print("rotation", rotation)
+    Debug:printmaps(complete_maps)
+    print("rotation", rotation)
 
     -- update player with new data
     self.piece.width = width
 
     -- offset the piece to make up for any padding created
-    local offset = pad_top
-    if rotation == 2 or 3 then offset = pad_bottom end
+    local offset
+    print("top pad", pad_top, "bot pad", pad_bottom)
+
+    if upsidedown then
+        local temp = pad_top
+         pad_top = pad_bottom
+         pad_bottom = temp
+    end
+
+    if rotation == 1 or rotation == 4 then offset = pad_top
+    elseif rotation == 3 or rotation == 2 then offset = pad_bottom end
     
-    if rotation == 1 or 3 then
+    print(offset)
+    print(xleast, yleast)
+    if rotation == 1 or rotation == 3 then
+        print("offsetting y")
         self.piece.row = yleast - offset
         self.piece.col = xleast
-    else
+    elseif rotation == 2 or rotation == 4 then
+        print("offsetting x")
         self.piece.row = yleast
         self.piece.col = xleast - offset
+    end
+    print(self.piece.col, self.piece.row)
 
     self.piece.rotation = rotation
     self.piece.map = complete_maps
@@ -272,7 +287,7 @@ function Player:remap()
     self.maxkick = math.ceil(width * 0.5)
     self.piece:findkickmaps()
     self:make_ghost()
-    -- Debug:printfields()
+    Debug:printfields()
 end
 
 function Player:TryNewPiece()
