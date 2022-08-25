@@ -114,16 +114,11 @@ function Player:givemap()
     end)
 
     -- makes other player remap to incorperate the new blocks
-    -- also resets other player's fall time and lock time so they have time to react to this
     if self.n == 1 then
         P2:remap()
-        P2.piece.time_next_fall = Falltime
-        P2.piece.still_time = 0
     end
     if self.n == 2 then
         P1:remap()
-        P1.piece.time_next_fall = Falltime
-        P1.piece.still_time = 0
     end
 end
 
@@ -183,10 +178,12 @@ function Player:remap()
     end
 
     -- ensure map is horizontal
-    local rotation = 5
+    local rotation = 1
+    print(rotation)
     if height > width then
         map = rotate(map)
-        rotation = rotation - 1
+        rotation = 4
+        print(rotation)
 
         local temp = width
         width = height
@@ -212,9 +209,12 @@ function Player:remap()
         end
     end
     local upsidedown = false
-    if wtop < wbottom then
+    print("wtop", wtop, "wbot", wbottom)
+    if wbottom > wtop then
         upsidedown = true
-        rotation = rotation - 2
+        if rotation == 1 then rotation = 3 end
+        if rotation == 4 then rotation = 2 end
+        print(rotation)
     end
 
     -- add padding to map to make it square
@@ -239,26 +239,38 @@ function Player:remap()
     -- rotation time (create a list of all map rotations)
     local complete_maps = {}
 
-    for i = 1, 4 do
-        if rotation == 5 then rotation = 1 end -- loops back to 1 if goes past 4
-        local n = rotation + 1     -- next map
-        if n == 5 then n = 1 end   -- also loop back if it goes past 4
-        complete_maps[n] = rotate(complete_maps[rotation])
-        rotation = rotation + 1
+    if not upsidedown then 
+        complete_maps[1] = map
+        complete_maps[2] = rotate(complete_maps[1])
+        complete_maps[3] = rotate(complete_maps[2])
+        complete_maps[4] = rotate(complete_maps[3])
+    else
+        complete_maps[3] = map
+        complete_maps[4] = rotate(complete_maps[3])
+        complete_maps[1] = rotate(complete_maps[4])
+        complete_maps[2] = rotate(complete_maps[1])
     end
-    rotation = rotation + 1
         
     Debug:printmaps(complete_maps)
     print("rotation before remap: "..self.piece.rotation)
 
     -- update player with new data
     self.piece.width = width
-    self.piece.row = yleast - pad_top
-    self.piece.col = xleast
+
+    local offset
+    if not upsidedown then offset = pad_top
+    else offset = pad_bottom end
+    
+    if rotation == 1 or rotation == 3 then
+        self.piece.row = ymost - offset
+        self.piece.col = xleast
+    else
+        self.piece.row = ymost
+        self.piece.col = xleast - offset
+    end
 
     self.piece.rotation = rotation
     self.piece.map = complete_maps
-    print("after remap: "..self.piece.rotation)
 
     self.maxkick = math.ceil(width * 0.5)
     self.piece:findkickmaps()
