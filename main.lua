@@ -119,6 +119,7 @@ function love.keypressed(key)
                     P1.piece:erase()
                     -- only switch pieces if piece can spawn
                     if not CanSpawn(Maps[Queue.pieces[1]], 1) then
+                        P1.piece:mark()
                         return
                     end
                     Held = P1.piece.map
@@ -128,6 +129,7 @@ function love.keypressed(key)
                     -- only switch pieces if piece can spawn
                     P1.piece:erase()
                     if not CanSpawn(Held, 1) then
+                        P1.piece:mark()
                         return
                     end
                     local temp = Held
@@ -163,6 +165,7 @@ function love.keypressed(key)
                     P2.piece:erase()
                     -- only switch pieces if piece can spawn
                     if not CanSpawn(Maps[Queue.pieces[1]], 2) then
+                        P2.piece:mark()
                         return
                     end
                     Held = P2.piece.map
@@ -172,6 +175,7 @@ function love.keypressed(key)
                     -- only switch pieces if piece can spawn
                     P2.piece:erase()
                     if not CanSpawn(Held, 2) then
+                        P2.piece:mark()
                         return
                     end
                     local temp = Held
@@ -249,6 +253,12 @@ function love.update(dt)
         end
     end
 
+    -- if both players can't spawn pieces, then the game is over
+    if P1.obstructed and not P1.piece and P2.obstructed and not P2.piece then
+        print("game over")
+        GameOver = true
+    end
+
     -- update existing pieces
     if P1.piece then
         if love.keyboard.isDown("down") then
@@ -266,12 +276,6 @@ function love.update(dt)
             P2.piece.speed = 1
         end
         P2:update(dt)
-    end
-
-    -- if both players can't spawn pieces, then the game is over
-    if P1.obstructed and P2.obstructed then
-        print("game over")
-        GameOver = true
     end
 end
 
@@ -394,7 +398,9 @@ function love.draw()
         end
 
         -- draw the piece
-        for i,row in ipairs(Held[1]) do
+        local rotation = 1
+        if Held[5] then rotation = 2 end
+        for i,row in ipairs(Held[rotation]) do
             for j, block in pairs(row) do
                 if block ~= " " then
                     love.graphics.setColor(colors[block])
@@ -495,9 +501,9 @@ end
 -- prints all maps from a list of maps
 function Debug:printmaps(maps, message)
     if message then print(message) end
-    for i,m in pairs(maps) do
+    for i=1, 4 do
         print(i.."_________")
-        for j,r in pairs(m) do
+        for j,r in pairs(maps[i]) do
             for k,b in pairs(r) do
                 if b == " " then b = "•" end
                 io.write(b.." ")

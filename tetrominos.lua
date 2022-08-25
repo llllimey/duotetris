@@ -161,23 +161,13 @@ function Tetromino:new(maps, player)
 
     self.evade_strength = 1
 
-    -- tetrominos spawn on the center of their side, erring away from the middlex
-    local offset
-    local col
-    local pdirection
-    if player == 1 then
-        pdirection = -1
-        offset = FIELDWIDTH * 1.5 - width
-        col = math.ceil(offset * 0.5) + 1
-    elseif player == 2 then
-        pdirection = 1
-        offset = FIELDWIDTH * 0.5 - width
-        col = math.floor(offset * 0.5) + 1
-    else
-        return
+
+    -- very wide pieces spawn sideways
+    if width > FIELDWIDTH then
+        width = maps[5].short
+        self.rotation = 2
     end
-    self.col = col
-    
+
     -- tetriminos spawn on the top of the screen
     local whitespace = 0
     for i,row in pairs(self.map[1]) do
@@ -195,11 +185,29 @@ function Tetromino:new(maps, player)
         end
     end
 
-    self.row = FIELDHEIGHT + 1 - 20 - whitespace
+    -- tetrominos spawn on the center of their side, erring away from the middlex
+    local offset
+    local col
+    local pdirection
+    if player == 1 then
+        pdirection = -1
+        offset = FIELDWIDTH * 1.5 - width
+        col = math.ceil(offset * 0.5) + 1
+    elseif player == 2 then
+        pdirection = 1
+        offset = FIELDWIDTH * 0.5 - width
+        col = math.floor(offset * 0.5) + 1
+    else
+        return
+    end
+    self.col = col
+    
+
+    self.row = math.ceil(FIELDHEIGHT - FIELDHEIGHTVISIBLE + 1) - whitespace
 
     -- if the normal spawn location is unavailable, kick to the nearest spot
     -- if the normal range of kicks doesn't work, try moving to the left/right and try again
-    
+
     -- how far the piece is to the other edge
     local to_edge = col
     if player == 2 then
@@ -207,29 +215,59 @@ function Tetromino:new(maps, player)
     end
 
     self.spawned = false
-    -- try kicking player, moving to the edge if it doesn't work
-    for i = 1, to_edge do
-        if self:spin("kick "..player) then
-            self.spawned = true
-            self.obstructed = false
-            return
+
+    -- kicks piece, moving towards edge if it doesn't work
+    -- returns true if it succeeds in kicking the piece, nothing otherwise
+    local function spawnkick(rotation)
+        for i=1, to_edge do
+            if self:spin(rotation) then
+                -- finds the lowest tile of the piece
+                local lowesttile = 0
+                ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+                    if y > lowesttile then lowesttile = y end
+                end)
+                -- if the lowest tile is above the field, the locatiion is invalid
+                -- because the piece cannot be seen by anyone playing the game
+                if lowesttile < math.ceil(FIELDHEIGHT - FIELDHEIGHTVISIBLE) then return end
+                self.spawned = true
+                self.obstructed = false
+                return true
+            end
+            self.col = self.col + pdirection
         end
-        self.obstructed = true
-        self.col = self.col + pdirection
     end
 
-    -- if normal kicks don't work, try with spin kicks instead
-    self.col = col
-    for i = 1, to_edge do
-        if self:spin("countercw") then
-            self.spawned = true
-            self.obstructed = false
-            return
-        end
-        self.obstructed = true
-        self.col = self.col + pdirection
-    end
+    -- try kicking with no rotation, and if that doesn't work, kick with rotation
+    if spawnkick("kick "..player) then return end
+    if spawnkick("countercw") then return end
+
+    -- if both kicks fail, then piece is obstructed
+    self.obstructed = true
+
+    -- for i = 1, to_edge do
+    --     if self:spin("kick "..player) then
+    --         self.spawned = true
+    --         self.obstructed = false
+    --         return
+    --     end
+    --     self.obstructed = true
+    --     self.col = self.col + pdirection
+    -- end
+
+    -- -- if normal kicks don't work, try with spin kicks instead
+    -- self.col = col
+    -- for i = 1, to_edge do
+    --     if self:spin("countercw") then
+    --         self.spawned = true
+    --         self.obstructed = false
+    --         return
+    --     end
+    --     self.obstructed = true
+    --     self.col = self.col + pdirection
+    -- end
 end
+
+
 
 -- does a function(x, y, block) for block occupied by a map,
 -- (x, y) being the coordinates of a tile on the field, block being what is at that tile.
@@ -239,6 +277,7 @@ function ForMapOccupiesDo(map, col, row, f)
     for i,r in pairs(map) do
         for j,block in pairs(r) do
             if block ~= " " then
+                -- print(j)
                 local y = row + i - 1
                 local x = col + j - 1
                 if f(x, y, block) then return true
