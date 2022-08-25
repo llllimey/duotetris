@@ -3,7 +3,7 @@ io.stdout:setvbuf("no")
 
 
 function love.load()
-    love.window.setMode(504, 486)
+    love.window.setMode(624, 486)
     love.window.setTitle("duotetris")
 
     Object = require "classic"
@@ -13,7 +13,7 @@ function love.load()
 
     FIELDHEIGHT = 40
     FIELDHEIGHTVISIBLE = 20.25
-    FIELDWIDTH = 10
+    FIELDWIDTH = 15
 
 
     -- Field stores everything on the field in the form of letter tiles or
