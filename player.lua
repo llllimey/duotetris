@@ -23,8 +23,7 @@ function Player:update(dt)
         self.piece:erase() -- always gotta erase before checking collisions
         -- don't lock if the piece can still fall downwards
         if not self.piece:collides_at(row + 1, col, rot) then
-            self.piece.time_still = 0
-            self.piece.time_next_fall = Locktime + 1
+            self.piece.time_still = Locktime
             self.piece:mark()
             return
         end
@@ -64,6 +63,7 @@ function Player:update(dt)
             -- so, try clearing rows
             self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
             self.piece = nil
+            print("P"..self.n.." trying row clear")
             TryRowClear()
         end
         
@@ -142,10 +142,13 @@ function Player:remap()
     end)
 
     -- if no bounds are found, then there must be no tiles for the player
-    -- so, player needs to try getting a new piece
+    -- so, player needs to try getting a new piece instead of remapping
     if xmost == 0 then
-        Player.piece = nil
-        Player:TryNewPiece()
+        self.piece = nil
+        print("xmost is 0")
+        if not self.n then print("remap: no n") end
+        self:TryNewPiece()
+        return
     end
 
     local width = xmost - xleast + 1
@@ -305,7 +308,7 @@ function Player:TryNewPiece()
     -- print(self.n..": trying piece")
     if not CanSpawn(Maps[Queue.pieces[1]], self.n) then
         -- print("ljkdfsn")
-        Player.obstructed = true
+        self.obstructed = true
         -- print("obstructed from canspawn")
         return
     end
@@ -313,7 +316,20 @@ function Player:TryNewPiece()
     -- new piece spawns 
     -- print("spawning piece")
     Player.obstructed = false
+    if not self.n then print("trynewpiece: no n") end
     self.piece = Tetromino(Maps[Queue:next()], self.n)
+    print("P"..self.n.." trying new piece")
+    if not self.piece then print("wtf, ther's no piece") end
+    if self.piece.obstructed then print("obstructed") end
+    -- sometimes, the piece has no row or col, and it breaks things
+    if not self.piece.row or not self.piece.col then
+        print("trynewpiece: no row or col")
+        if self.piece.row then print("row",self.piece.row) end
+        if self.piece.col then print("col", self.piece.col) end
+        if self.piece.rotation then print("rotation", self.piece.rotation) end
+        if self.piece.map then Debug:printmaps(self.piece.map) end
+        Debug:printfields()
+    end
     self.piece:mark()
     -- don't forget to make a ghost
     self:make_ghost()
@@ -332,17 +348,12 @@ end
 -- clears rows if they are filled, even if tiles belong to the other player
 function TryRowClear()
     local fullrows = {}
-    local deletedplayer
     for i = 1, FIELDHEIGHT do
         -- if a row is full of blocks, then keep track of it
         local count = FIELDWIDTH
         for j,block in pairs(Field[i]) do
             if block ~= " " then
                 count = count - 1
-                if not deletedplayer then 
-                    local tileplayer = Playerfield[i][j]
-                    if tileplayer ~= " " then deletedplayer = tileplayer end
-                end
             end
         end
         if count == 0 then
@@ -371,6 +382,8 @@ function TryRowClear()
     end
 
     -- Remap other player to reflect these changes
+    -- if P1.n then print("P1 n:",P1.n) end
+    -- if P2.n then print("P2 n:", P2.n) end
     if not P1.piece and P2.piece then P2:remap() end
     if not P2.piece and P1.piece then P1:remap() end
 

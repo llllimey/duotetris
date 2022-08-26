@@ -185,6 +185,8 @@ function Tetromino:new(maps, player)
         end
     end
 
+    self.row = math.ceil(FIELDHEIGHT - FIELDHEIGHTVISIBLE + 1) - whitespace
+
     -- tetrominos spawn on the center of their side, erring away from the middlex
     local offset
     local col
@@ -201,9 +203,10 @@ function Tetromino:new(maps, player)
         return
     end
     self.col = col
-    
 
-    self.row = math.ceil(FIELDHEIGHT - FIELDHEIGHTVISIBLE + 1) - whitespace
+    if not self.col then print("tetro:new no col") end
+    if not self.row then print("tetro:new no row") end
+    if not self.row or not self.col then return end
 
     -- if the normal spawn location is unavailable, kick to the nearest spot
     -- if the normal range of kicks doesn't work, try moving to the left/right and try again
@@ -231,6 +234,9 @@ function Tetromino:new(maps, player)
                 if lowesttile < math.ceil(FIELDHEIGHT - FIELDHEIGHTVISIBLE) then return end
                 self.spawned = true
                 self.obstructed = false
+                
+                if not self.col then print("spawnkick: no col") end
+                if not self.row then print("spawnkick: no row") end
                 return true
             end
             self.col = self.col + pdirection
@@ -243,28 +249,6 @@ function Tetromino:new(maps, player)
 
     -- if both kicks fail, then piece is obstructed
     self.obstructed = true
-
-    -- for i = 1, to_edge do
-    --     if self:spin("kick "..player) then
-    --         self.spawned = true
-    --         self.obstructed = false
-    --         return
-    --     end
-    --     self.obstructed = true
-    --     self.col = self.col + pdirection
-    -- end
-
-    -- -- if normal kicks don't work, try with spin kicks instead
-    -- self.col = col
-    -- for i = 1, to_edge do
-    --     if self:spin("countercw") then
-    --         self.spawned = true
-    --         self.obstructed = false
-    --         return
-    --     end
-    --     self.obstructed = true
-    --     self.col = self.col + pdirection
-    -- end
 end
 
 
@@ -299,7 +283,11 @@ end
 -- marks tetromino on both fields
 --   does not check for collision
 function Tetromino:mark()
+    if not self.row or not self.col then
+        print("mark: no row or col")
+    end
     ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
+        -- print(block)
         Field[y][x] = block
         Playerfield[y][x] = self.p
     end)

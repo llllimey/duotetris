@@ -23,6 +23,12 @@ function love.load()
             Field[i][j] = " "
         end
     end
+    Field[40] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    Field[39] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    Field[38] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    Field[37] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    Field[36] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    Field[35] = {" ", "t", "t", "t", "t", "t", " ", " ", " ", " ", "t", "t", "t"}
 
     -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
     Playerfield = {}
@@ -35,7 +41,7 @@ function love.load()
 
     -- upcoming tetrominos
     Queue = {}
-    Queue.pieces = {}
+    Queue.pieces = {"i", "i"}
     -- appends queue with a 7 tetrominos in a random order
     function Queue:add_bag()
         local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -81,7 +87,7 @@ function love.load()
 end
 
 function love.keypressed(key)
-    -- if key == "g" then Debug:debugkey() end
+    if key == "g" then Debug:debugkey() end
     -- if game is over, allow player to reset game by pressing space
     if GameOver then
         if key == "space" then
@@ -340,6 +346,7 @@ function love.draw()
     -- draws the playing field
     for i,row in ipairs(Field) do
         for j,block in pairs(row) do
+            if not colors[block] then Debug:debugkey() end
             love.graphics.setColor(colors[block])
             love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
         end
@@ -361,6 +368,24 @@ function love.draw()
     if Score then
         love.graphics.print(tostring(Score.level), -80, height -68)
         love.graphics.print(tostring(Score.points), -80, height -28)
+    end
+
+-- draw player time still and time next fall
+    love.graphics.print("P1", -120, height -250)
+    love.graphics.print("P2", -120, height -170)
+    if P1.piece then
+        local obstruct = "false"
+        if P1.obstructed then obstruct = "true" end
+        love.graphics.print("obstructed: "..obstruct, -115, height-230, 0, 0.8,  0.8)
+        love.graphics.print("time still "..tostring(P1.piece.time_still), -115,height -210, 0, 0.8,  0.8)
+        love.graphics.print("time next fall "..tostring(P1.piece.time_next_fall), -115,height -190, 0, 0.8,  0.8)
+    end
+    if P2.piece then
+        local obstruct = "false"
+        if P2.obstructed then obstruct = "true" end
+        love.graphics.print("obstructed: "..obstruct, -115, height-150, 0, 0.8,  0.8)
+        love.graphics.print("time still "..tostring(P2.piece.time_still), -115, height-130, 0, 0.8,  0.8)
+        love.graphics.print("time next fall "..tostring(P2.piece.time_next_fall), -115, height-110, 0, 0.8,  0.8)
     end
 
     -- don't draw anything past this if game isn't started yet
@@ -470,22 +495,14 @@ Debug = {}
 -- does these actions when the debug key, g,  is pressed
 function Debug:debugkey()
     self:printfields()
-    self:printobstructed()
-    print(P2.time_next_fall)
-    if P2.piece then
-        print("p2 has a piece", P2.piece.time_still, P2.piece.time_next_fall)
-        self:printmaps(P2.piece.map)
-    end
-    if P1.piece then
-        print("p1 has a piece", P1.piece.time_still, P1.piece.time_next_fall)
-        self:printmaps(P2.piece.map)
-    end
+    if P1.piece then self:printmaps(P1.piece.map) end
+    if P2.piece then self:printmaps(P2.piece.map) end
 end
 
 -- prints out the Field and Playerfield
 function Debug:printfields(message)
     if message then print(message) end
-    for i = 15, #Field do
+    for i = 1, #Field do
         for j,block in pairs(Playerfield[i]) do
             if block ~= " " then
                 io.write(block.." ")
