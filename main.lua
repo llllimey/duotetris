@@ -5,6 +5,8 @@ io.stdout:setvbuf("no")
 function love.load()
     love.window.setMode(624, 486)
     love.window.setTitle("duotetris")
+    local icon = love.image.newImageData("icon.png")
+    love.window.setIcon(icon)
 
     Object = require "classic"
     
