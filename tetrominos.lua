@@ -316,6 +316,14 @@ function Tetromino:playererase()
     end)
 end
 
+-- only marks tetro on player field
+--    used in case the player field needs refreshing
+function Tetromino:playermark()
+    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+        Playerfield[y][x] = self.p
+    end)
+end
+
 -- checks if the tetromino will collide at a certain location/rotation
 --  returns true if it will collide, false if it won't collide
 function Tetromino:collides_at(c_row, c_col, c_rotation)

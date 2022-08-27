@@ -324,33 +324,34 @@ function Player:TryNewPiece()
             table.insert(backupfield[i], Field[i][j])
         end
     end
-    local backupplayerfield = {}
-    for i = 1, FIELDHEIGHT do
-        table.insert(backupplayerfield, {})
-        for j = 1, FIELDWIDTH do
-            table.insert(backupplayerfield[i], Playerfield[i][j])
-        end
-    end
+
     self.piece:mark()
 
-    local error = false
+
     if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
         if block == 1 or block == 2 then return true end
     end) then
-        Field = backupfield
-        error = true
+        print("trynewpiece: restoring field backup")
+        for i=1, FIELDHEIGHT do
+            for j=1, FIELDWIDTH do
+                Field[i][j] = backupfield[i][j]
+            end
+        end
+        self.piece = nil
+        return
     end
     if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
         if block ~= 1 and block ~= 2 then return true end
     end) then
-        Playerfield = backupplayerfield
-        error = true
-    end
-    if error then
-        Debug:printfields()
-        print("wtff")
-        self.piece = nil
-        return
+        print("trynewpiece: resetting playerfield")
+        for i = 1, FIELDHEIGHT do
+            table.insert(Playerfield, {})
+            for j = 1, FIELDWIDTH do
+                table.insert(Playerfield[i], " ")
+            end
+        end
+        if P1.piece then P1.piece:playermark() end
+        if P2.piece then P2.piece:playermark() end
     end
 
     -- don't forget to make a ghost
