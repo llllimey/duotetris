@@ -23,12 +23,11 @@ function love.load()
             Field[i][j] = " "
         end
     end
-    Field[40] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    Field[39] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    Field[38] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    Field[37] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    Field[36] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    Field[35] = {" ", "t", "t", "t", "t", "t", " ", " ", " ", " ", "t", "t", "t"}
+    -- Field[40] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Field[39] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Field[38] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Field[37] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Field[36] = {" ", "t", "t", "t", " ", " ", " ", " ", "t", "t", "t", "t", "t"}
 
     -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
     Playerfield = {}
@@ -41,7 +40,7 @@ function love.load()
 
     -- upcoming tetrominos
     Queue = {}
-    Queue.pieces = {"i", "i"}
+    Queue.pieces = {}
     -- appends queue with a 7 tetrominos in a random order
     function Queue:add_bag()
         local bag = {"i", "o", "t", "s", "z", "j", "l"}
@@ -205,6 +204,9 @@ end
 function love.focus(f) Focus = f end
 
 function love.update(dt)
+    if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+        if block == 1 or block == 2 then return true end
+    end) then Debug:debugkey() end
     -- Debug:printobstructed()
     -- starting sequence
     if GameStarting then
@@ -346,15 +348,16 @@ function love.draw()
     -- draws the playing field
     for i,row in ipairs(Field) do
         for j,block in pairs(row) do
-            if not colors[block] then Debug:debugkey() end
+            if not colors[block] then print("field draw:") Debug:debugkey() end
             love.graphics.setColor(colors[block])
             love.graphics.rectangle("fill", j*blocksize, i*blocksize, blocksize, blocksize)
         end
     end
 
     -- gives player blocks a colored border
-    local c = {{1, 1, 0.5, 0.5}, {0.5, 1, 1, 0.5}}
+    local c = {{1, 0, 0, 0.5}, {0.5, 1, 1, 0.5}}
     ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+        if not c[block] then print("player border draw") Debug:debugkey() end
         love.graphics.setColor(c[block])
         love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
     end)
@@ -371,22 +374,22 @@ function love.draw()
     end
 
 -- draw player time still and time next fall
-    love.graphics.print("P1", -120, height -250)
-    love.graphics.print("P2", -120, height -170)
-    if P1.piece then
-        local obstruct = "false"
-        if P1.obstructed then obstruct = "true" end
-        love.graphics.print("obstructed: "..obstruct, -115, height-230, 0, 0.8,  0.8)
-        love.graphics.print("time still "..tostring(P1.piece.time_still), -115,height -210, 0, 0.8,  0.8)
-        love.graphics.print("time next fall "..tostring(P1.piece.time_next_fall), -115,height -190, 0, 0.8,  0.8)
-    end
-    if P2.piece then
-        local obstruct = "false"
-        if P2.obstructed then obstruct = "true" end
-        love.graphics.print("obstructed: "..obstruct, -115, height-150, 0, 0.8,  0.8)
-        love.graphics.print("time still "..tostring(P2.piece.time_still), -115, height-130, 0, 0.8,  0.8)
-        love.graphics.print("time next fall "..tostring(P2.piece.time_next_fall), -115, height-110, 0, 0.8,  0.8)
-    end
+    -- love.graphics.print("P1", -120, height -250)
+    -- love.graphics.print("P2", -120, height -170)
+    -- if P1.piece then
+    --     local obstruct = "false"
+    --     if P1.obstructed then obstruct = "true" end
+    --     love.graphics.print("obstructed: "..obstruct, -115, height-230, 0, 0.8,  0.8)
+    --     love.graphics.print("time still "..tostring(P1.piece.time_still), -115,height -210, 0, 0.8,  0.8)
+    --     love.graphics.print("time next fall "..tostring(P1.piece.time_next_fall), -115,height -190, 0, 0.8,  0.8)
+    -- end
+    -- if P2.piece then
+    --     local obstruct = "false"
+    --     if P2.obstructed then obstruct = "true" end
+    --     love.graphics.print("obstructed: "..obstruct, -115, height-150, 0, 0.8,  0.8)
+    --     love.graphics.print("time still "..tostring(P2.piece.time_still), -115, height-130, 0, 0.8,  0.8)
+    --     love.graphics.print("time next fall "..tostring(P2.piece.time_next_fall), -115, height-110, 0, 0.8,  0.8)
+    -- end
 
     -- don't draw anything past this if game isn't started yet
     if not GameStarted and not GameStarting then
@@ -523,6 +526,30 @@ function Debug:printfields(message)
     end
     print()
 end
+
+function Debug:printbeforefields(field, pfield)
+    for i = 1, #field do
+        for j,block in pairs(pfield[i]) do
+            if block ~= " " then
+                io.write(block.." ")
+            else
+                io.write("• ")
+            end
+        end
+        io.write("|"..i.. "          ")
+        if i < 10 then io.write(" ") end
+        for j,block in pairs(field[i]) do
+            if block ~= " " then
+                io.write(block.." ")
+            else
+                io.write("• ")
+            end
+        end
+        print("|"..i)
+    end
+    print()
+end
+
 -- prints all maps from a list of maps
 function Debug:printmaps(maps, message)
     if message then print(message) end

@@ -258,17 +258,23 @@ end
 -- can return true if f() returns true, returns nothing otherwise.
 -- useful so i don't have to rewrite the loop for iterating through the block
 function ForMapOccupiesDo(map, col, row, f)
+    -- local write
+    -- if #map < FIELDWIDTH then write = true end
     for i,r in pairs(map) do
         for j,block in pairs(r) do
             if block ~= " " then
-                -- print(j)
+                -- if write then io.write(block.." ") end
                 local y = row + i - 1
                 local x = col + j - 1
                 if f(x, y, block) then return true
                 end
+            else
+                -- if write then io.write("• ") end
             end
         end
+        -- if write then print() end
     end
+    -- if write then print() end
 end
 
 -- removes tetromino from both fields
@@ -283,14 +289,23 @@ end
 -- marks tetromino on both fields
 --   does not check for collision
 function Tetromino:mark()
-    if not self.row or not self.col then
-        print("mark: no row or col")
-    end
+    -- if not self.row or not self.col then
+    --     print("mark: no row or col")
+    -- end
+    -- Debug:printfields("tetro mark begin")
+    -- local blocks = 0
     ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
-        -- print(block)
+        -- if block == 1 or block == 2 then print("wtf")
         Field[y][x] = block
+        -- if Field[y][x] ~= block then print("wtffff")
         Playerfield[y][x] = self.p
+        -- if Playerfield[y][x] ~= self.p then print("wtffffffffff")
     end)
+    
+    -- if blocks > 4 then Debug:printmaps(self.map, "rotation: "..tostring(self.rotation)) end
+    if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+        if block == 1 or block == 2 then return true end
+    end) then print("tetro mark end") Debug:debugkey() end
 end
 
 -- only erases tetro from the player field

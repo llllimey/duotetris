@@ -7,7 +7,7 @@ end
 -- updates tetromino to fall or lock
 function Player:update(dt)
     -- if self.obstructed then print(self.n) end
-    if self.obstructed and not self.piece then
+    if self.obstructed or not self.piece then
         -- if the player is obstructed, keep trying to spawn
         self:TryNewPiece()
         return
@@ -61,12 +61,10 @@ function Player:update(dt)
         else
             -- if it isn't locked on to a player, then it must be on the ground
             -- so, try clearing rows
-            self.piece:playererase()-- erase from the Playerfield because the piece is no longer under control
-            self.piece = nil
             print("P"..self.n.." trying row clear")
-            TryRowClear()
+            self: TryRowClear()
         end
-        
+
         self.piece = nil   -- player has no piece
         self.ghost = nil   -- gotta remove the ghost, too
         self:TryNewPiece() -- try to give player a new piece
@@ -145,8 +143,8 @@ function Player:remap()
     -- so, player needs to try getting a new piece instead of remapping
     if xmost == 0 then
         self.piece = nil
-        print("xmost is 0")
-        if not self.n then print("remap: no n") end
+        -- print("xmost is 0")
+        -- if not self.n then print("remap: no n") end
         self:TryNewPiece()
         return
     end
@@ -316,23 +314,51 @@ function Player:TryNewPiece()
     -- new piece spawns 
     -- print("spawning piece")
     Player.obstructed = false
-    if not self.n then print("trynewpiece: no n") end
+    -- if not self.n then print("trynewpiece: no n") end
     self.piece = Tetromino(Maps[Queue:next()], self.n)
-    print("P"..self.n.." trying new piece")
-    if not self.piece then print("wtf, ther's no piece") end
-    if self.piece.obstructed then print("obstructed") end
-    -- sometimes, the piece has no row or col, and it breaks things
-    if not self.piece.row or not self.piece.col then
-        print("trynewpiece: no row or col")
-        if self.piece.row then print("row",self.piece.row) end
-        if self.piece.col then print("col", self.piece.col) end
-        if self.piece.rotation then print("rotation", self.piece.rotation) end
-        if self.piece.map then Debug:printmaps(self.piece.map) end
-        Debug:printfields()
+
+    local backupfield = {}
+    for i = 1, FIELDHEIGHT do
+        table.insert(backupfield, {})
+        for j = 1, FIELDWIDTH do
+            table.insert(backupfield[i], Field[i][j])
+        end
+    end
+    local backupplayerfield = {}
+    for i = 1, FIELDHEIGHT do
+        table.insert(backupplayerfield, {})
+        for j = 1, FIELDWIDTH do
+            table.insert(backupplayerfield[i], Playerfield[i][j])
+        end
     end
     self.piece:mark()
+
+    local error = false
+    if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+        if block == 1 or block == 2 then return true end
+    end) then
+        Field = backupfield
+        error = true
+    end
+    if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+        if block ~= 1 and block ~= 2 then return true end
+    end) then
+        Playerfield = backupplayerfield
+        error = true
+    end
+    if error then
+        Debug:printfields()
+        print("wtff")
+        self.piece = nil
+        return
+    end
+
     -- don't forget to make a ghost
     self:make_ghost()
+
+    -- if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+    --     if block == 1 or block == 2 then return true end
+    -- end) then print("Trynewpiece after mark") Debug:debugkey() end
 end
 
 -- checks to see if a map of a tetromino can spawn
@@ -346,20 +372,28 @@ function CanSpawn(map, player)
 end
 
 -- clears rows if they are filled, even if tiles belong to the other player
-function TryRowClear()
+function Player:TryRowClear()
     local fullrows = {}
-    for i = 1, FIELDHEIGHT do
-        -- if a row is full of blocks, then keep track of it
+    for i = self.piece.row, FIELDHEIGHT do
+        -- if a row is full of blocks and contains self, then keep track of it
+        local meinrow
         local count = FIELDWIDTH
         for j,block in pairs(Field[i]) do
             if block ~= " " then
                 count = count - 1
+                if Playerfield[i][j] == self.n then
+                meinrow = true
+                end
             end
         end
-        if count == 0 then
+        if count == 0 and meinrow then
             table.insert(fullrows, i)
         end
     end
+
+    -- now that i know which lines to clear, it is ok to remove player piece
+    self.piece:playererase()
+    self.piece = nil
 
     local linescleared = #fullrows
     -- if there are no full rows, then don't do anything
@@ -386,6 +420,7 @@ function TryRowClear()
     -- if P2.n then print("P2 n:", P2.n) end
     if not P1.piece and P2.piece then P2:remap() end
     if not P2.piece and P1.piece then P1:remap() end
+
 
     -- if 4+ lines are cleared, then do a fun tetris effect
     if linescleared > 3 then
