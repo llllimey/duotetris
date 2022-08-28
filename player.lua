@@ -8,10 +8,12 @@ end
 function Player:update(dt)
     -- if self.obstructed then print(self.n) end
     if self.obstructed or not self.piece then
+        print("here")
         -- if the player is obstructed, keep trying to spawn
         self:TryNewPiece()
         return
     end
+    if self.piece == nil then print("here2") end
     -- self.piece.time_next_fall keeps track of how long until a piece should try to fall again
     -- self.piece.time_still keeps track of how long the piece hasn't fallen for
     -- self.piece locks if it is still for more than Locktime seconds
@@ -328,31 +330,41 @@ function Player:TryNewPiece()
     self.piece:mark()
 
 
-    if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
-        if block == 1 or block == 2 then return true end
-    end) then
-        print("trynewpiece: restoring field backup")
-        for i=1, FIELDHEIGHT do
-            for j=1, FIELDWIDTH do
-                Field[i][j] = backupfield[i][j]
-            end
-        end
-        self.piece = nil
-        return
-    end
-    if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
-        if block ~= 1 and block ~= 2 then return true end
-    end) then
-        print("trynewpiece: resetting playerfield")
-        for i = 1, FIELDHEIGHT do
-            table.insert(Playerfield, {})
-            for j = 1, FIELDWIDTH do
-                table.insert(Playerfield[i], " ")
-            end
-        end
-        if P1.piece then P1.piece:playermark() end
-        if P2.piece then P2.piece:playermark() end
-    end
+    -- if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+    --     if block == 1 or block == 2 then return true end
+    -- end) then
+    --     print("trynewpiece: restoring field backup")
+    --     for i=1, FIELDHEIGHT do
+    --         for j=1, FIELDWIDTH do
+    --             Field[i][j] = backupfield[i][j]
+    --         end
+    --     end
+    --     Debug:printfields()
+    --     for i = 1, FIELDHEIGHT do
+    --         table.insert(Playerfield, {})
+    --         for j = 1, FIELDWIDTH do
+    --             table.insert(Playerfield[i], " ")
+    --         end
+    --     end
+    --     if P1.piece then P1.piece:playermark() end
+    --     if P2.piece then P2.piece:playermark() end
+    --     Debug:printfields("aadfas")
+    --     self.obstructed = true
+    --     return
+    -- end
+    -- if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+    --     if block ~= 1 and block ~= 2 then return true end
+    -- end) then
+    --     print("trynewpiece: resetting playerfield")
+    --     for i = 1, FIELDHEIGHT do
+    --         table.insert(Playerfield, {})
+    --         for j = 1, FIELDWIDTH do
+    --             table.insert(Playerfield[i], " ")
+    --         end
+    --     end
+    --     if P1.piece then P1.piece:playermark() end
+    --     if P2.piece then P2.piece:playermark() end
+    -- end
 
     -- don't forget to make a ghost
     self:make_ghost()

@@ -260,8 +260,11 @@ end
 function ForMapOccupiesDo(map, col, row, f)
     -- local write
     -- if #map < FIELDWIDTH then write = true end
-    for i,r in pairs(map) do
-        for j,block in pairs(r) do
+    local ilen = #map
+    local jlen = #map[1]
+    for i= 1, ilen do
+        for j=1, jlen do
+            local block = map[i][j]
             if block ~= " " then
                 -- if write then io.write(block.." ") end
                 local y = row + i - 1
@@ -294,18 +297,42 @@ function Tetromino:mark()
     -- end
     -- Debug:printfields("tetro mark begin")
     -- local blocks = 0
-    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
-        -- if block == 1 or block == 2 then print("wtf")
-        Field[y][x] = block
-        -- if Field[y][x] ~= block then print("wtffff")
-        Playerfield[y][x] = self.p
-        -- if Playerfield[y][x] ~= self.p then print("wtffffffffff")
-    end)
+    local p = self.p
+    local row = self.row
+    local col = self.col
+    local map = self.map[self.rotation]
+    local ilen = #map
+    local jlen = #map[1]
+    for i= 1, ilen do
+        for j=1, jlen do
+            local block = map[i][j]
+            if block ~= " " then
+                -- if write then io.write(block.." ") end
+                local y = row + i - 1
+                local x = col + j - 1
+                io.write(block)
+                Field[y][x] = block
+                Playerfield[y][x] = p
+                io.write(Playerfield[y][x])
+            end
+        end
+    end
+    -- ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
+    --     -- if block == 1 or block == 2 then print("wtf")
+    --     io.write(block)
+    --     Field[y][x] = block
+    --     -- if Field[y][x] ~= block then print("wtffff")
+    --     Playerfield[y][x] = p
+    --     io.write(Playerfield[y][x])
+    --     -- print(" x: "..x.." y: "..y)
+    --     -- if Playerfield[y][x] ~= self.p then print("wtffffffffff")
+    -- end)
+    print()
     
     -- if blocks > 4 then Debug:printmaps(self.map, "rotation: "..tostring(self.rotation)) end
     if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
         if block == 1 or block == 2 then return true end
-    end) then print("tetro mark end") Debug:debugkey() end
+    end) then print("P"..self.p.."tetro mark end") Debug:debugkey() end
 end
 
 -- only erases tetro from the player field

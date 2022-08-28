@@ -358,10 +358,6 @@ function love.draw()
     local c = {{1, 0.5, 0.5, 0.5}, {0.5, 1, 1, 0.5}}
     if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
         if not c[block] then print("player border draw") Debug:debugkey() end
-        -- returns true if the playerfield is not aligned with the Field
-        if Field[x][y] == " " then
-            return true
-        end
         love.graphics.setColor(c[block])
         love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
     end) then
@@ -375,8 +371,10 @@ function love.draw()
         if P1.piece then P1.piece:playermark() end
         if P2.piece then P2.piece:playermark() end
         -- draw the colored borders
-        love.graphics.setColor(c[block])
-        love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
+        ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+            love.graphics.setColor(c[block])
+            love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
+        end)
     end
 
     love.graphics.pop()
