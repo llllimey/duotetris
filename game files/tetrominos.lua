@@ -284,62 +284,38 @@ end
 --  use together with mark() to ensure tetromino doesn't leave a ghost behind
 function Tetromino:erase()
     ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
-        Field[y][x] = " "
-        Playerfield[y][x] = " "
+        Tetrofield.field[y][x] = " "
+        Playerfield.field[y][x] = " "
     end)
 end
 
 -- marks tetromino on both fields
 --   does not check for collision
 function Tetromino:mark()
-    -- if not self.row or not self.col then
-    --     print("mark: no row or col")
-    -- end
-    -- Debug:printfields("tetro mark begin")
-    -- local blocks = 0
-    local p = self.p
-    local row = self.row
-    local col = self.col
-    local map = self.map[self.rotation]
-    local ilen = #map
-    local jlen = #map[1]
-    for i= 1, ilen do
-        for j=1, jlen do
-            local block = map[i][j]
-            if block ~= " " then
-                -- if write then io.write(block.." ") end
-                local y = row + i - 1
-                local x = col + j - 1
-                io.write(block)
-                Field[y][x] = block
-                Playerfield[y][x] = p
-                io.write(Playerfield[y][x])
-            end
-        end
-    end
-    -- ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
-    --     -- if block == 1 or block == 2 then print("wtf")
-    --     io.write(block)
-    --     Field[y][x] = block
-    --     -- if Field[y][x] ~= block then print("wtffff")
-    --     Playerfield[y][x] = p
-    --     io.write(Playerfield[y][x])
-    --     -- print(" x: "..x.." y: "..y)
-    --     -- if Playerfield[y][x] ~= self.p then print("wtffffffffff")
-    -- end)
-    print()
-    
+    local n = self.p
+    Debug:fielderror(self.p, 'tetro mark begin')
+
+    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y, block)
+        Tetrofield:set(y, x, block)
+        assert(Debug:fielderror(self.p, block..' tetro mark end') == true)
+
+    end)
+    assert(Debug:fielderror(self.p, 'tetro mark mid') == true)
+
+    ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
+        Playerfield:set(y, x, n)
+    end)
+
     -- if blocks > 4 then Debug:printmaps(self.map, "rotation: "..tostring(self.rotation)) end
-    if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
-        if block == 1 or block == 2 then return true end
-    end) then print("P"..self.p.."tetro mark end") Debug:debugkey() end
+    assert(Debug:fielderror(self.p, 'tetro mark end') == true)
+    
 end
 
 -- only erases tetro from the player field
 --   used when piece locks
 function Tetromino:playererase()
     ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
-        Playerfield[y][x] = " "
+        Playerfield.field[y][x] = " "
     end)
 end
 
@@ -347,7 +323,7 @@ end
 --    used in case the player field needs refreshing
 function Tetromino:playermark()
     ForMapOccupiesDo(self.map[self.rotation], self.col, self.row, function(x, y)
-        Playerfield[y][x] = self.p
+        Playerfield.field[y][x] = self.p
     end)
 end
 
@@ -355,7 +331,7 @@ end
 --  returns true if it will collide, false if it won't collide
 function Tetromino:collides_at(c_row, c_col, c_rotation)
     if ForMapOccupiesDo(self.map[c_rotation], c_col, c_row, function (x, y)
-        if not Field[y] or Field[y][x] ~= " " then
+        if not Tetrofield.field[y] or Tetrofield.field[y][x] ~= " " then
             return true
         end
     end) then return true else return false end

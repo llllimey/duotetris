@@ -96,7 +96,7 @@ function Player:onplayer()
     if me == 2 and not P1.piece then return end
     return ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
         if y >= FIELDHEIGHT then return end
-        local underme = Playerfield[y + 1][x]
+        local underme = Playerfield.field[y + 1][x]
         if underme ~= " "          -- if there is a player under me
             and underme ~= me then -- and the player is not me
             return true            -- then i am on another player
@@ -112,7 +112,7 @@ function Player:givemap()
 
     -- set all of its blocks to belong to the other player
     ForMapOccupiesDo(self.piece.map[self.piece.rotation], self.piece.col, self.piece.row, function(x, y)
-        Playerfield[y][x] = otherp
+        Playerfield.field[y][x] = otherp
     end)
 
     -- makes other player remap to incorperate the new blocks
@@ -132,7 +132,7 @@ function Player:remap()
     local xleast = FIELDWIDTH
     local ymost = 1
     local yleast = FIELDHEIGHT
-    ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+    ForMapOccupiesDo(Playerfield.field, 1, 1, function(x, y, block)
         if block == self.n then
             if x > xmost then xmost = x end
             if x < xleast then xleast = x end
@@ -161,10 +161,10 @@ function Player:remap()
         index = index + 1
         table.insert(map, {})
         for x=xleast, xmost do
-            if Playerfield[y][x] == " " then
+            if Playerfield.field[y][x] == " " then
                 table.insert(map[index], " ")
             else
-                table.insert(map[index], Field[y][x])
+                table.insert(map[index], Tetrofield.field[y][x])
             end
         end
     end
@@ -319,31 +319,56 @@ function Player:TryNewPiece()
     -- if not self.n then print("trynewpiece: no n") end
     self.piece = Tetromino(Maps[Queue:next()], self.n)
 
-    local backupfield = {}
-    for i = 1, FIELDHEIGHT do
-        table.insert(backupfield, {})
-        for j = 1, FIELDWIDTH do
-            table.insert(backupfield[i], Field[i][j])
+    -- local backupfield = {}
+    -- for i = 1, FIELDHEIGHT do
+    --     table.insert(backupfield, {})
+    --     for j = 1, FIELDWIDTH do
+    --         table.insert(backupfield[i], Tetrofield.field[i][j])
+    --     end
+    -- end
+
+    -- self.piece:mark()
+    Debug:fielderror(self.n, 'try new piece set tetrofield')
+    local ilen = #self.piece.map[self.piece.rotation]
+    local jlen = #self.piece.map[self.piece.rotation][1]
+    for i = 1, ilen do
+        for j = 1, jlen do
+            local block = self.piece.map[self.piece.rotation][i][j]
+            if block ~= ' ' then
+                local y = self.piece.row + i - 1
+                local x = self.piece.col + j - 1
+                Tetrofield:set(y, x, block)
+            end
         end
     end
-
-    self.piece:mark()
-
-
-    -- if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+    
+    Debug:fielderror(self.n, 'try new piece set playerfield')
+    for i = 1, ilen do
+        for j = 1, jlen do
+            local block = self.piece.map[self.piece.rotation][i][j]
+            if block ~= ' ' then
+                local y = self.piece.row + i - 1
+                local x = self.piece.col + j - 1
+                Playerfield:set(y, x, self.n)
+            end
+        end
+    end
+    
+    Debug:fielderror(self.n, 'try new piece after both sets')
+    -- if ForMapOccupiesDo(Tetrofield.field, 1, 1, function(x, y, block)
     --     if block == 1 or block == 2 then return true end
     -- end) then
     --     print("trynewpiece: restoring field backup")
     --     for i=1, FIELDHEIGHT do
     --         for j=1, FIELDWIDTH do
-    --             Field[i][j] = backupfield[i][j]
+    --             Tetrofield.field[i][j] = backupfield[i][j]
     --         end
     --     end
     --     Debug:printfields()
     --     for i = 1, FIELDHEIGHT do
-    --         table.insert(Playerfield, {})
+    --         table.insert(Playerfield.field, {})
     --         for j = 1, FIELDWIDTH do
-    --             table.insert(Playerfield[i], " ")
+    --             table.insert(Playerfield.field[i], " ")
     --         end
     --     end
     --     if P1.piece then P1.piece:playermark() end
@@ -352,14 +377,14 @@ function Player:TryNewPiece()
     --     self.obstructed = true
     --     return
     -- end
-    -- if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+    -- if ForMapOccupiesDo(Playerfield.field, 1, 1, function(x, y, block)
     --     if block ~= 1 and block ~= 2 then return true end
     -- end) then
     --     print("trynewpiece: resetting playerfield")
     --     for i = 1, FIELDHEIGHT do
-    --         table.insert(Playerfield, {})
+    --         table.insert(Playerfield.field, {})
     --         for j = 1, FIELDWIDTH do
-    --             table.insert(Playerfield[i], " ")
+    --             table.insert(Playerfield.field[i], " ")
     --         end
     --     end
     --     if P1.piece then P1.piece:playermark() end
@@ -369,7 +394,7 @@ function Player:TryNewPiece()
     -- don't forget to make a ghost
     self:make_ghost()
 
-    -- if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+    -- if ForMapOccupiesDo(Tetrofield.field, 1, 1, function(x, y, block)
     --     if block == 1 or block == 2 then return true end
     -- end) then print("Trynewpiece after mark") Debug:debugkey() end
 end
@@ -391,10 +416,10 @@ function Player:TryRowClear()
         -- if a row is full of blocks and contains self, then keep track of it
         local meinrow
         local count = FIELDWIDTH
-        for j,block in pairs(Field[i]) do
+        for j,block in pairs(Tetrofield.field[i]) do
             if block ~= " " then
                 count = count - 1
-                if Playerfield[i][j] == self.n then
+                if Playerfield.field[i][j] == self.n then
                 meinrow = true
                 end
             end
@@ -422,10 +447,10 @@ function Player:TryRowClear()
 
     -- remove full rows and add new rows for each one removed
     for i,v in pairs(fullrows) do
-        table.remove(Field, v)
-        table.insert(Field, 1, emptyrow)
-        table.remove(Playerfield, v)
-        table.insert(Playerfield, 1, emptyrow)
+        table.remove(Tetrofield.field, v)
+        table.insert(Tetrofield.field, 1, emptyrow)
+        table.remove(Playerfield.field, v)
+        table.insert(Playerfield.field, 1, emptyrow)
     end
 
     -- Remap other player to reflect these changes
@@ -446,7 +471,7 @@ function Player:TryRowClear()
 
     -- check for full clear
     local fullclear_mult = 8
-    for i,v in pairs(Field) do
+    for i,v in pairs(Tetrofield.field) do
         for j,block in pairs(v) do
             if block ~= " " then
                 fullclear_mult = 1
@@ -514,7 +539,7 @@ function Player:make_ghost()
 
     -- move ghost downwards until it can't anymore (would collide if it moved further down)
     while not ForMapOccupiesDo(ghost.map, ghost.x, ghost.y + 1, function(x, y)
-        if not Field[y] or Field[y][x] ~= " " then
+        if not Tetrofield.field[y] or Tetrofield.field[y][x] ~= " " then
             return true
         end
     end) do

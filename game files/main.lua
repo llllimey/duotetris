@@ -1,42 +1,31 @@
 io.stdout:setvbuf("no")
 
+Object = require "classic"
+
+require "tetrominos"
+require "player" -- also contains row clear function
+require "field"
+
+FIELDHEIGHT = 40
+FIELDHEIGHTVISIBLE = 20.25
+FIELDWIDTH = 13
+
 
 
 function love.load()
     love.window.setMode(624, 486)
 
-    Object = require "classic"
-    
-    require "tetrominos"
-    require "player" -- also contains row clear function
 
-    FIELDHEIGHT = 40
-    FIELDHEIGHTVISIBLE = 20.25
-    FIELDWIDTH = 13
+    -- Tetrofield.field stores everything on the field in the form of letter tiles or
+    Tetrofield = Field('tetromino')
+    -- Tetrofield.field[40] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Tetrofield.field[39] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Tetrofield.field[38] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Tetrofield.field[37] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
+    -- Tetrofield.field[36] = {" ", "t", "t", "t", " ", " ", " ", " ", "t", "t", "t", "t", "t"}
 
-
-    -- Field stores everything on the field in the form of letter tiles or
-    Field = {}
-    for i=1, FIELDHEIGHT do
-        table.insert(Field, {})
-        for j=1, FIELDWIDTH do
-            Field[i][j] = " "
-        end
-    end
-    -- Field[40] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    -- Field[39] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    -- Field[38] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    -- Field[37] = {" ", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t", "t"}
-    -- Field[36] = {" ", "t", "t", "t", " ", " ", " ", " ", "t", "t", "t", "t", "t"}
-
-    -- Playerfield store the location of player tiles as 1 for P1 and 2 for P2
-    Playerfield = {}
-    for i=1, FIELDHEIGHT do
-        table.insert(Playerfield, {})
-        for j=1, FIELDWIDTH do
-            Playerfield[i][j] = " "
-        end
-    end
+    -- Playerfield.field store the location of player tiles as 1 for P1 and 2 for P2
+    Playerfield = Field('player')
 
     -- upcoming tetrominos
     Queue = {}
@@ -204,7 +193,7 @@ end
 function love.focus(f) Focus = f end
 
 function love.update(dt)
-    if ForMapOccupiesDo(Field, 1, 1, function(x, y, block)
+    if ForMapOccupiesDo(Tetrofield.field, 1, 1, function(x, y, block)
         if block == 1 or block == 2 then return true end
     end) then Debug:debugkey() end
     -- Debug:printobstructed()
@@ -346,7 +335,7 @@ function love.draw()
     P2:render_ghost(colors, blocksize)
 
     -- draws the playing field
-    for i,row in ipairs(Field) do
+    for i,row in ipairs(Tetrofield.field) do
         for j,block in pairs(row) do
             if not colors[block] then print("field draw:") Debug:debugkey() end
             love.graphics.setColor(colors[block])
@@ -356,26 +345,26 @@ function love.draw()
 
     -- gives player blocks a colored border
     local c = {{1, 0.5, 0.5, 0.5}, {0.5, 1, 1, 0.5}}
-    if ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
-        if not c[block] then print("player border draw") Debug:debugkey() end
-        love.graphics.setColor(c[block])
-        love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
-    end) then
-        -- clear the player field
-        for i=1, FIELDHEIGHT do
-            for j=1, FIELDWIDTH do
-                Playerfield[i][j] = " "
-            end
-        end
-        -- re-mark the players onto the field
-        if P1.piece then P1.piece:playermark() end
-        if P2.piece then P2.piece:playermark() end
+    -- if ForMapOccupiesDo(Playerfield.field, 1, 1, function(x, y, block)
+    --     if not c[block] then print("player border draw") Debug:debugkey() end
+    --     love.graphics.setColor(c[block])
+    --     love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
+    -- end) then
+    --     -- clear the player field
+    --     for i=1, FIELDHEIGHT do
+    --         for j=1, FIELDWIDTH do
+    --             Playerfield.field[i][j] = " "
+    --         end
+    --     end
+    --     -- re-mark the players onto the field
+    --     if P1.piece then P1.piece:playermark() end
+    --     if P2.piece then P2.piece:playermark() end
         -- draw the colored borders
-        ForMapOccupiesDo(Playerfield, 1, 1, function(x, y, block)
+        ForMapOccupiesDo(Playerfield.field, 1, 1, function(x, y, block)
             love.graphics.setColor(c[block])
             love.graphics.rectangle("line", x * blocksize, y * blocksize, blocksize, blocksize)
         end)
-    end
+    -- end
 
     love.graphics.pop()
 
@@ -507,6 +496,8 @@ function love.quit()
 end
 
 
+
+
 -- some useful print commands for debugging
 Debug = {}
 
@@ -520,8 +511,8 @@ end
 -- prints out the Field and Playerfield
 function Debug:printfields(message)
     if message then print(message) end
-    for i = 1, #Field do
-        for j,block in pairs(Playerfield[i]) do
+    for i = 1, #Tetrofield.field do
+        for j,block in pairs(Playerfield.field[i]) do
             if block ~= " " then
                 io.write(block.." ")
             else
@@ -530,7 +521,7 @@ function Debug:printfields(message)
         end
         io.write("|"..i.. "          ")
         if i < 10 then io.write(" ") end
-        for j,block in pairs(Field[i]) do
+        for j,block in pairs(Tetrofield.field[i]) do
             if block ~= " " then
                 io.write(block.." ")
             else
@@ -587,4 +578,15 @@ function Debug:printobstructed()
     if P1.obstructed then o1 = "P1 obstructed " end
     if P2.obstructed then o2 = "P2 obstructed " end
     io.write(o1..o2)
+end
+
+function Debug:fielderror(player, message)
+    if ForMapOccupiesDo(Tetrofield.field, 1, 1, function(x, y, block)
+        if block == 1 or block == 2 then return true end
+    end) then
+        print('P'..player..' '..message)
+        Debug:debugkey()
+    else
+        return true
+    end
 end
