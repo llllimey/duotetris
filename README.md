@@ -1,9 +1,11 @@
 # duotetris
 tetris for two
 
-![Combining pieces in duotetris](https://github.com/llllimey/duotetris/blob/main/duotetris%20features.gif)
+![Combining pieces in duotetris gif](https://github.com/llllimey/duotetris/blob/main/duotetris%20features.gif)
+Combining pieces in duotetris
 
-![Normal gameplay in duotetris](https://github.com/llllimey/duotetris/blob/main/duotetris%20gameplay.gif)
+![Normal gameplay in duotetris gif](https://github.com/llllimey/duotetris/blob/main/duotetris%20gameplay.gif)
+Normal gameplay in duotetris
 
 ## Controls
 space: start and restart game
