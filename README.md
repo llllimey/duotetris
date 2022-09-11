@@ -1,6 +1,8 @@
 # duotetris
 tetris for two
 
+![](https://github.com/llllimey/duotetris/blob/main/duotetris%20features.gif) ![](https://github.com/llllimey/duotetris/blob/main/duotetris%20gameplay.gif)
+
 ## Controls
 space: start and restart game
 
